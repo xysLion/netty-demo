@@ -1,0 +1,39 @@
+# 应用信息(app info)
+info:
+  app:
+    name: 共通组件
+    description: 该组件中有电话号码归属地查询、短信发送、邮件发送等接口
+    version: 1.0.0
+
+# 日志相关配置(logging setting)
+logging:
+  path: E://logs//common-server
+
+# netty服务相关配置
+netty:
+  port: 8089
+  workerCount: 20
+
+# 数据库相关配置(jdbc setting)
+jdbc:
+  driverClass: com.mysql.jdbc.Driver
+  url: jdbc:mysql://testup2yun.mysql.rds.aliyuncs.com/test_regionarea_server?autoCommit=false&useUnicode=true&characterEncoding=utf-8
+  username: t_reg_server
+  password: test_regionarea_server_76132
+  maxActive: 20
+  initialSize: 3
+  minIdle: 3
+  maxWait: 60000
+  timeBetweenEvictionRunsMillis: 60000
+  minEvictableIdleTimeMillis: 300000
+  validationQuery: SELECT 1
+  testWhileIdle: true
+  testOnBorrow: false
+  testOnReturn: false
+
+# 应用中共通配置项
+common:
+  encrypt: nomal
+  visiblePassword: true
+  datakey: a7SDfrdDKRBe5FaN2n3GftLKKtkfZS5GsdEjfdjsyBHldVhqwIxkRcI2uRoE+bPgzRUBdyKokxscobiP2fIIvmQf+DueOBr87zJzs8FcwABTP3/wx7t+eHHhYseEfnq3
+  datakeyforbootstrap: a7SDfrdDKRBe5FaN2n3GftLKKtkfZS5GsdEjfdjsyBFTOX/RNgpB/e47qWrEdCEt

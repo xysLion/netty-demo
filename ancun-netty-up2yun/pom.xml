@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.ancun</groupId>
+    <artifactId>ancun-netty-up2yun</artifactId>
+    <version>1.1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>ancun-netty-up2yun</name>
+    <url>http://maven.apache.org</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <io.netty.version>4.0.25.Final</io.netty.version>
+        <org.springframework.version>4.1.6.RELEASE</org.springframework.version>
+        <nexus.url>http://112.124.52.105:9002/nexus/content/repositories</nexus.url>
+    </properties>
+
+    <dependencies>
+
+        <!-- 任务模块包 -->
+        <dependency>
+            <groupId>com.ancun</groupId>
+            <artifactId>ancun-netty-task-core</artifactId>
+            <version>1.1.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- 第三方工具类包 -->
+        <dependency>
+            <groupId>ancun</groupId>
+            <artifactId>ancun-thirdparty</artifactId>
+            <version>1.0</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>slf4j-log4j12</artifactId>
+                    <groupId>org.slf4j</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>slf4j-api</artifactId>
+                    <groupId>org.slf4j</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- ancun-netty包 -->
+        <dependency>
+            <groupId>com.ancun</groupId>
+            <artifactId>ancun-netty</artifactId>
+            <version>1.1.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <version>${org.springframework.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+    </dependencies>
+
+    <distributionManagement>
+        <repository>
+            <id>releases</id>
+            <name>Internal Releases</name>
+            <url>${nexus.url}/releases</url>
+        </repository>
+        <snapshotRepository>
+            <id>Snapshots</id>
+            <name>Internal Snapshots</name>
+            <url>${nexus.url}/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>appassembler-maven-plugin</artifactId>
+                <version>1.8.1</version>
+
+                <configuration>
+                    <configurationDirectory>resources</configurationDirectory>
+                    <copyConfigurationDirectory>true</copyConfigurationDirectory>
+                    <configurationSourceDirectory>src/main/resources/</configurationSourceDirectory>
+
+                    <useWildcardClassPath>true</useWildcardClassPath>
+                    <repositoryLayout>flat</repositoryLayout>
+                    <repositoryName>lib</repositoryName>
+                    <assembleDirectory>${project.build.directory}/up2yun</assembleDirectory>
+
+                    <binFileExtensions>
+                        <unix>.sh</unix>
+                    </binFileExtensions>
+                    <platforms>
+                        <platform>windows</platform>
+                        <platform>unix</platform>
+                    </platforms>
+                    <programs>
+                        <program>
+                            <name>startup</name>
+                            <mainClass>com.ancun.up2yun.boot.ServerBootstrap</mainClass>
+                            <commandLineArguments>
+                            </commandLineArguments>
+                            <jvmSettings>
+                                <initialMemorySize>20m</initialMemorySize>
+                                <maxMemorySize>256m</maxMemorySize>
+                                <maxStackSize>128m</maxStackSize>
+                                <!--<maxDirectMemorySize>256</maxDirectMemorySize>-->
+                                <extraArguments>
+                                    <extraArgument>-Dtest=false</extraArgument>
+                                    <extraArgument>-Dlog4j.properties=false</extraArgument>
+                                    <extraArgument>-Dup2yun.home=$BASEDIR/resources</extraArgument>
+                                </extraArguments>
+                            </jvmSettings>
+                        </program>
+                    </programs>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>
