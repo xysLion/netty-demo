@@ -2,21 +2,13 @@ package com.ancun.common.utils;
 
 import com.ancun.common.component.BasicDataCache;
 import com.ancun.common.constant.PhoneCorpEnum;
-
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.annotation.Resource;
-
-import static com.ancun.common.constant.Constants.CHINA_MOBILE_REGEX;
-import static com.ancun.common.constant.Constants.CHINA_TELECOM_REGEX;
-import static com.ancun.common.constant.Constants.CHINA_UNICOM_REGEX;
-import static com.ancun.common.constant.Constants.MOBILE_REGEX;
-import static com.ancun.common.constant.Constants.SPECIAL_CHINA_TELECOM;
-import static com.ancun.common.constant.Constants.TELEPHONE_NO_HYPHEN_REGEX;
-import static com.ancun.common.constant.Constants.TELEPHONE_REGEX;
+import static com.ancun.common.constant.Constants.*;
 
 /**
  * 手机号码鉴权工具类

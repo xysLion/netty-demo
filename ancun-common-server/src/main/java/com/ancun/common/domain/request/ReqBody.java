@@ -1,7 +1,5 @@
 package com.ancun.common.domain.request;
 
-import javax.xml.bind.annotation.*;
-
 @XmlRootElement(name="request")
 @XmlAccessorType(value = XmlAccessType.FIELD)
 public class ReqBody<T> {

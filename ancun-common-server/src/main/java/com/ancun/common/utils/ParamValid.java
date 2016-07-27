@@ -1,10 +1,9 @@
 package com.ancun.common.utils;
 
+import com.ancun.common.exception.EduException;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
-
-import com.ancun.common.exception.EduException;
 
 import javax.annotation.Nullable;
 

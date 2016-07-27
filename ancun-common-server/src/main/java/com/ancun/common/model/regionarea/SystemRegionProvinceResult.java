@@ -1,9 +1,9 @@
 package com.ancun.common.model.regionarea;
 
+import org.springframework.jdbc.core.RowMapper;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import org.springframework.jdbc.core.RowMapper;
 
 /**
  * 省份信息表,数据集映射

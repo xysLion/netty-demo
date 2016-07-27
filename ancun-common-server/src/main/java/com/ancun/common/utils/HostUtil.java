@@ -3,8 +3,6 @@ package com.ancun.common.utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.*;
-import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

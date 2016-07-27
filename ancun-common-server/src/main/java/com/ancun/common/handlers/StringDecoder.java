@@ -1,14 +1,5 @@
 package com.ancun.common.handlers;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
-import com.google.common.collect.Maps;
-import com.google.gson.Gson;
-
 import com.ancun.common.component.BasicDataCache;
 import com.ancun.common.constant.Constants;
 import com.ancun.common.constant.ResponseConst;
@@ -18,29 +9,25 @@ import com.ancun.common.exception.EduException;
 import com.ancun.common.utils.ByteBufToBytes;
 import com.ancun.utils.sign.HmacSha1Utils;
 import com.ancun.utils.sign.MD5Utils;
-
+import com.google.common.base.*;
+import com.google.common.collect.Maps;
+import com.google.gson.Gson;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.codec.http.*;
+import io.netty.util.ReferenceCountUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Nullable;
+import javax.annotation.Resource;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
-
-import javax.annotation.Nullable;
-import javax.annotation.Resource;
-
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.handler.codec.http.HttpContent;
-import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.HttpMethod;
-import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.QueryStringDecoder;
-import io.netty.util.ReferenceCountUtil;
 
 /**
  * 把httpRequest转换成String
