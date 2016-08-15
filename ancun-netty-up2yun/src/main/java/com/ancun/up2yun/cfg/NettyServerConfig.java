@@ -33,7 +33,7 @@ public class NettyServerConfig {
     private int tcpPort;
 
     @Value("${upload.file.size}")
-    private long maxContentSize;
+    private int maxContentSize;
 
     @Value("${so.keepalive}")
     private boolean keepAlive;
