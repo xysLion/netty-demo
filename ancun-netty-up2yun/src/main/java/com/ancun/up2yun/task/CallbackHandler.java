@@ -9,6 +9,7 @@ import com.ancun.task.task.HandleTask;
 import com.ancun.task.task.TaskBus;
 import com.ancun.task.utils.*;
 import com.ancun.up2yun.constant.BussinessConstant;
+import com.ancun.up2yun.constant.MsgConstant;
 import com.ancun.up2yun.constant.ResponseConst;
 import com.ancun.utils.DESUtils;
 import com.google.gson.Gson;
@@ -101,23 +102,21 @@ public class CallbackHandler {
             int statusCode = respJson.getResponse().getInfo().getCode();
             if(statusCode != ResponseConst.SUCCESS){
                 retryFlg = true;
-                reason = SpringContextUtil.getMessage("server.callback.retry.reason_1",
-                        new Object[]{ uri, getCallbackServerInfo(taskParams), response });
+                reason = String.format(MsgConstant.SERVER_CALLBACK_RETRY_REASON_1, uri, getCallbackServerInfo(taskParams), response );
             } else {
                 // 回调成功
                 taskDao.success(task);
-                logger.info(SpringContextUtil.getMessage("server.callback.success",
+                logger.info(String.format(MsgConstant.SERVER_CALLBACK_SUCCESS,
                         new Object[]{TaskUtil.getValue(taskParams, SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
                                 HostUtil.getIpv4Info().getLocalAddress(), uri}));
             }
 
         } catch (Exception e) {
-            logger.info(SpringContextUtil.getMessage("server.callback.retry.reason_2",
-                    new Object[]{ uri, getCallbackServerInfo(taskParams)}), e);
-            e.printStackTrace();
+            String msg = String.format(MsgConstant.SERVER_CALLBACK_RETRY_REASON_2,
+                    new Object[]{ uri, getCallbackServerInfo(taskParams)});
+            logger.info(msg, e);
             retryFlg = true;
-            reason = SpringContextUtil.getMessage("server.callback.retry.reason_2",
-                    new Object[]{ uri, getCallbackServerInfo(taskParams) }) + e.getMessage();
+            reason = msg + e.getMessage();
         }
 
         // 如果需要重试
@@ -132,7 +131,7 @@ public class CallbackHandler {
                 // 失败
                 taskDao.fail(task);
 
-                String message = SpringContextUtil.getMessage("server.callback.failure",
+               String message = String.format(MsgConstant.SERVER_CALLBACK_FAILURE,
                         new Object[]{TaskUtil.getValue(taskParams, SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
                                 HostUtil.getIpv4Info().getLocalAddress(),
                                 uri,
@@ -143,7 +142,7 @@ public class CallbackHandler {
                 logger.info(message);
 
                 // 发送通知
-                noticeUtil.sendNotice(SpringContextUtil.getMessage("callback.exception"), message);
+                noticeUtil.sendNotice(MsgConstant.CALLBACK_EXCEPTION_NOTICE_TITLE, message);
 
             } else {
 
@@ -151,9 +150,9 @@ public class CallbackHandler {
                 // 重试
                 taskDao.retry(task);
 
-                logger.info(SpringContextUtil.getMessage("server.callback.retry",
+                logger.info("文件[{}]在服务器节点[{1}]上向回调服务器[{}]发送回调请求不成功，回调服务器基础信息[{}]，已添加发送回调请求任务队列！",
                         new Object[]{TaskUtil.getValue(taskParams, SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
-                                HostUtil.getIpv4Info().getLocalAddress(), uri, getCallbackServerInfo(taskParams) }));
+                                HostUtil.getIpv4Info().getLocalAddress(), uri, getCallbackServerInfo(taskParams) });
             }
         }
 

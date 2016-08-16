@@ -4,7 +4,6 @@ import com.ancun.task.constant.Constant;
 import com.ancun.task.server.monitor.MonitorServerListener;
 import com.ancun.task.utils.HostUtil;
 import com.ancun.task.utils.NoticeUtil;
-import com.ancun.task.utils.SpringContextUtil;
 import com.google.common.util.concurrent.Service;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
@@ -36,13 +35,13 @@ public class UploadMonitorServerListener extends MonitorServerListener {
     public void terminated(Service.State from) {
 
         // 构建信息
-        String message = SpringContextUtil.getMessage(Constant.SERVER_STOP_INFO, new Object[]{
+        String message = String.format(Constant.SERVER_STOP_INFO,
                 HostUtil.getIpv4Info().getLocalAddress(),
                 serverName
-        });
+        );
 
         // 通知管理员
-        noticeUtil.sendNotice(SpringContextUtil.getMessage(Constant.SERVER_EXCEPTION), message);
+        noticeUtil.sendNotice(Constant.SERVER_EXCEPTION, message);
 
         logger.info(message);
     }
@@ -57,14 +56,14 @@ public class UploadMonitorServerListener extends MonitorServerListener {
     public void failed(Service.State from, Throwable failure) {
 
         // 构建信息
-        String message = SpringContextUtil.getMessage(Constant.SERVER_EXCEPTION_INFO, new Object[]{
+        String message = String.format(Constant.SERVER_EXCEPTION_INFO,
                 HostUtil.getIpv4Info().getLocalAddress(),
                 serverName,
                 failure.getCause()
-        });
+        );
 
         // 通知管理员
-        noticeUtil.sendNotice(SpringContextUtil.getMessage(Constant.SERVER_EXCEPTION), message);
+        noticeUtil.sendNotice(Constant.SERVER_EXCEPTION, message);
 
         logger.info(message);
     }

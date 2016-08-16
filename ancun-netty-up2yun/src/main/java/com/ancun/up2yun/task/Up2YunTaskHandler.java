@@ -8,6 +8,7 @@ import com.ancun.task.task.HandleTask;
 import com.ancun.task.task.TaskBus;
 import com.ancun.task.utils.*;
 import com.ancun.up2yun.constant.BussinessConstant;
+import com.ancun.up2yun.constant.MsgConstant;
 import com.ancun.up2yun.constant.StatusEnum;
 import com.ancun.up2yun.event.Up2YunEvent;
 import com.ancun.up2yun.listener.Up2YunListener;
@@ -124,10 +125,10 @@ public class Up2YunTaskHandler {
                 FileUtils.deleteQuietly(file);
 
                 // 如果不需要回调，则直接提示成功
-                logger.info(SpringContextUtil.getMessage("file.upload.success",
+                logger.info("文件[{0}]在服务器节点[{1}]上{2}！",
                         new Object[]{TaskUtil.getValue(taskParams,
                                 SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
-                                HostUtil.getIpv4Info().getLocalAddress(), callbackResult}));
+                                HostUtil.getIpv4Info().getLocalAddress(), callbackResult});
             }
             // 否则重试
             else {
@@ -139,9 +140,8 @@ public class Up2YunTaskHandler {
             }
 
         } catch (Exception e) {
-            logger.info(SpringContextUtil.getMessage("file.upload.retry.reason_1") + getYunInfo(taskParams), e);
-            reason = SpringContextUtil.getMessage("file.upload.retry.reason_1") + getYunInfo(taskParams);
-
+            reason = "上传到云对象存储时出现异常。" + getYunInfo(taskParams);
+            logger.info(reason, e);
             retryFlg = true;
         }
 
@@ -161,7 +161,7 @@ public class Up2YunTaskHandler {
                 // 上传失败
                 taskDao.fail(task);
 
-                String message = SpringContextUtil.getMessage("file.upload.failure",
+                String message = String.format(MsgConstant.FILE_UPLOAD_FAILURE,
                         new Object[]{TaskUtil.getValue(taskParams,
                                 SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
                                 HostUtil.getIpv4Info().getLocalAddress(),
@@ -169,7 +169,7 @@ public class Up2YunTaskHandler {
                                 getYunInfo(taskParams),
                                 reason
                         });
-                noticeUtil.sendNotice(SpringContextUtil.getMessage("upload.exception"), message);
+                noticeUtil.sendNotice(MsgConstant.UPLOAD_EXCEPTION_NOTICE_TITLE, message);
                 logger.info(message);
             } else {
 
@@ -177,13 +177,13 @@ public class Up2YunTaskHandler {
                 // 转变重试状态
                 taskDao.retry(task);
 
-                logger.info(SpringContextUtil.getMessage("file.upload.retry",
+                logger.info("文件[{}]在服务器节点[{}]上{}，上传到云的信息[{}]，已添加重试上传任务队列。",
                         new Object[]{TaskUtil.getValue(taskParams,
                                 SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
                                 HostUtil.getIpv4Info().getLocalAddress(),
                                 callbackResult,
                                 getYunInfo(taskParams)
-                        }));
+                        });
             }
         }
 
@@ -210,10 +210,10 @@ public class Up2YunTaskHandler {
             task.setHandleTimeEnum(TaskHandleTimeEnum.IMMEDIATELY);
             taskDao.addTask(task);
 
-            logger.info(SpringContextUtil.getMessage("server.callback",
+            logger.info("文件[{}]在服务器节点[{}]上添加进发送回调信息任务队列。",
                     new Object[]{TaskUtil.getValue(taskParams,
                             SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
-                            HostUtil.getIpv4Info().getLocalAddress()}));
+                            HostUtil.getIpv4Info().getLocalAddress()});
         }
 
         // 接收文件请求结束

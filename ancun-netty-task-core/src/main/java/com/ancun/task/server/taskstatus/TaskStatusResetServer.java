@@ -3,7 +3,6 @@ package com.ancun.task.server.taskstatus;
 import com.ancun.task.server.ServerManager;
 import com.ancun.task.service.ScanService;
 import com.ancun.task.strategy.Strategy;
-import com.ancun.task.utils.SpringContextUtil;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.MoreExecutors;
 import org.slf4j.Logger;
@@ -79,9 +78,9 @@ public class TaskStatusResetServer {
          */
         @Override
         protected void runOneIteration() throws Exception {
-            logger.debug(SpringContextUtil.getMessage("task.reset.scan.start"));
+            logger.debug("扫描需要重置的任务...");
             int count = scanService.resetTask(firstScanFlg, strategy.getStrategy());
-            logger.debug(SpringContextUtil.getMessage("task.reset.scan.end", new Object[]{count}));
+            logger.debug("已重置了{}个任务。", count);
             firstScanFlg = false;
         }
 

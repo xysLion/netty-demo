@@ -5,7 +5,6 @@ import com.ancun.task.entity.TaskStatusInfo;
 import com.ancun.task.server.ServerManager;
 import com.ancun.task.service.ScanService;
 import com.ancun.task.task.TaskBus;
-import com.ancun.task.utils.SpringContextUtil;
 import com.google.common.base.Joiner;
 import org.springframework.stereotype.Component;
 
@@ -55,18 +54,21 @@ public class ApplicationInfo {
         // 未完成任务信息
         List<TaskStatusInfo> noCompletes = scanService.notCompleteTaskCount();
 
-        String noCompletesMessage = SpringContextUtil.getMessage(Constant.NOCOMPLETE_TASK_COUNT,
-                new Object[]{ noCompletes.toString() });
+//        String noCompletesMessage = SpringContextUtil.getMessage(Constant.NOCOMPLETE_TASK_COUNT,
+//                new Object[]{ noCompletes.toString() });
+        String noCompletesMessage = String.format(Constant.NOCOMPLETE_TASK_COUNT, noCompletes.toString());
 
         // 未开始任务信息
         List<TaskStatusInfo> noStarts = scanService.notStartTaskCount();
-        String noStartsMessage = SpringContextUtil.getMessage(Constant.NOSTART_TASK_COUNT,
-                new Object[]{noStarts.toString()});
+//        String noStartsMessage = SpringContextUtil.getMessage(Constant.NOSTART_TASK_COUNT,
+//                new Object[]{noStarts.toString()});
+        String noStartsMessage = String.format(Constant.NOSTART_TASK_COUNT, noStarts.toString());
 
         // 执行中任务信息
         List<TaskStatusInfo> handlings = scanService.handlingTaskCount();
-        String handlingsMessage = SpringContextUtil.getMessage(Constant.NOSTART_TASK_COUNT,
-                new Object[]{handlings.toString()});
+//        String handlingsMessage = SpringContextUtil.getMessage(Constant.NOSTART_TASK_COUNT,
+//                new Object[]{handlings.toString()});
+        String handlingsMessage = String.format(Constant.HANDLING_TASK_COUNT, handlings);
 
         return Joiner.on(JOINER_STRING)
                 .skipNulls()

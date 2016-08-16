@@ -3,7 +3,6 @@ package com.ancun.task.server.monitor;
 import com.ancun.task.constant.Constant;
 import com.ancun.task.server.ServerManager;
 import com.ancun.task.utils.NoticeUtil;
-import com.ancun.task.utils.SpringContextUtil;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.MoreExecutors;
 import org.slf4j.Logger;
@@ -76,16 +75,16 @@ public class MonitorServer {
         @Override
         protected void runOneIteration() throws Exception {
 
-            logger.debug(SpringContextUtil.getMessage("monitor.task.start"));
+            logger.debug("监控进程启动中...");
 
             // 获取监视信息
             String message = applicationInfo.monitor();
             // 通知管理员
-            noticeUtil.sendNotice(SpringContextUtil.getMessage(Constant.UPLOAD_MONITOR), message);
+            noticeUtil.sendNotice(Constant.UPLOAD_MONITOR, message);
 
             logger.info(message);
 
-            logger.debug(SpringContextUtil.getMessage("monitor.task.end"));
+            logger.debug("监控进程结束。");
         }
 
         /**

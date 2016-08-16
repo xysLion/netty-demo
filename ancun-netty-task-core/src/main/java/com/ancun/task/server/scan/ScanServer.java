@@ -5,7 +5,6 @@ import com.ancun.task.event.InQueneEvent;
 import com.ancun.task.server.ServerManager;
 import com.ancun.task.service.ScanService;
 import com.ancun.task.strategy.Strategy;
-import com.ancun.task.utils.SpringContextUtil;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -87,7 +86,7 @@ public class ScanServer {
         @Override
         protected void runOneIteration() throws Exception {
 
-            logger.debug(SpringContextUtil.getMessage("nocomplete.task.scan.start", new Object[0]));
+            logger.debug("正在扫描需要执行任务...");
 
             // 取得任务类型列表
             List<Integer> taskHandlers = scanService.scanTaskHandler();
@@ -97,7 +96,7 @@ public class ScanServer {
 
                 // 取得待执行任务
                 List<Task> tasks = scanService.scanTask(strategy.getStrategy(), taskHandler);
-                logger.debug(SpringContextUtil.getMessage("nocomplete.task.scan.count", new Object[]{tasks.size()}));
+                logger.debug("已扫描到{}需要执行任务,即将执行扫描到的任务", tasks.size());
 
                 // 配置文件中设置的任务执行间隔时间
 //          long duration = Integer.valueOf(SpringContextUtil.getProperty(Constant.DURATION));
@@ -119,7 +118,7 @@ public class ScanServer {
                 }
             }
 
-            logger.debug(SpringContextUtil.getMessage("nocomplete.task.scan.end", new Object[0]));
+            logger.debug("需要执行任务扫描结束。");
         }
 
         /**

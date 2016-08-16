@@ -3,6 +3,7 @@ package com.ancun.up2yun.server.monitor;
 import com.ancun.task.server.monitor.CustomApplicationInfo;
 import com.ancun.task.utils.HostUtil;
 import com.ancun.task.utils.SpringContextUtil;
+import com.ancun.up2yun.constant.MsgConstant;
 import org.apache.commons.io.FileUtils;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
@@ -34,10 +35,8 @@ public class UploadCustomApplicationInfo extends CustomApplicationInfo {
         File file = new File(tempDir);
         // 已用的空间
         long usedSize = FileUtils.sizeOfDirectory(file);
-        usedSize = usedSize / (1024 * 1024);
-        String message = SpringContextUtil.getMessage("arrears.task.info", new Object[]{
-                HostUtil.getIpv4Info().getLocalAddress(),
-                usedSize });
+        usedSize = usedSize / (1024 * 124);
+        String message = String.format(MsgConstant.USED_DISK_INFO, HostUtil.getIpv4Info().getLocalAddress(), usedSize);
 
         return message;
     }

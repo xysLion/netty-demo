@@ -4,12 +4,9 @@ import com.ancun.task.constant.ProcessEnum;
 import com.ancun.task.dao.TaskDao;
 import com.ancun.task.entity.Task;
 import com.ancun.task.event.InQueneEvent;
-import com.ancun.task.utils.HostUtil;
-import com.ancun.task.utils.MD5Util;
-import com.ancun.task.utils.NoticeUtil;
-import com.ancun.task.utils.SpringContextUtil;
-import com.ancun.task.utils.TaskUtil;
+import com.ancun.task.utils.*;
 import com.ancun.up2yun.constant.BussinessConstant;
+import com.ancun.up2yun.constant.MsgConstant;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.eventbus.EventBus;
@@ -23,22 +20,9 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.TooLongFrameException;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpContent;
-import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.HttpMethod;
-import io.netty.handler.codec.http.HttpObject;
-import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.LastHttpContent;
-import io.netty.handler.codec.http.multipart.Attribute;
-import io.netty.handler.codec.http.multipart.DefaultHttpDataFactory;
-import io.netty.handler.codec.http.multipart.FileUpload;
-import io.netty.handler.codec.http.multipart.HttpDataFactory;
-import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
+import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.multipart.*;
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder.EndOfDataDecoderException;
-import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType;
 import io.netty.util.CharsetUtil;
 import org.slf4j.Logger;
@@ -334,19 +318,15 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
     private void writeResponse(ChannelHandlerContext ctx, HttpResponseStatus httpResponseStatus, String returnMsg) {
 
     	StringBuffer resultStr = new StringBuffer();
-    	resultStr.append(SpringContextUtil.getMessage("server.node.info",
-				new Object[]{ HostUtil.getIpv4Info().getLocalAddress() }));
+    	resultStr.append(String.format(MsgConstant.SERVER_NODE_INFO, HostUtil.getIpv4Info().getLocalAddress()));
     	if(httpResponseStatus.code() == HttpResponseStatus.OK.code()) {
-    		resultStr.append(SpringContextUtil.getMessage("file.receive.success",
-					new Object[]{ctx.channel().remoteAddress().toString(),
-							taskParams.get(SpringContextUtil.getProperty(BussinessConstant.FILE_KEY))}));
+    		resultStr.append(String.format(MsgConstant.FILE_RECEIVE_SUCCESS, ctx.channel().remoteAddress().toString(),
+							taskParams.get(SpringContextUtil.getProperty(BussinessConstant.FILE_KEY))));
     	} else if(httpResponseStatus.code() == HttpResponseStatus.INTERNAL_SERVER_ERROR.code()) {
-    		resultStr.append(SpringContextUtil.getMessage("request.receive.exception",
-					new Object[]{ ctx.channel().remoteAddress().toString(),
-							taskParams.get(SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
-							returnMsg }));
+    		resultStr.append(String.format(MsgConstant.REQUEST_RECEIVE_EXCEPTION,
+					ctx.channel().remoteAddress().toString(), returnMsg ));
     	}
-        //将请求响应的内容转换成ChannelBuffer.
+        //将请求响应的内容转换成ChannelBuffer.e
     	ByteBuf buf = Unpooled.copiedBuffer(resultStr.toString(), CharsetUtil.UTF_8);
 
 
@@ -403,17 +383,16 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
 
 		// 错误信息
-		String message = SpringContextUtil.getMessage("request.receive.exception",
-				new Object[]{ctx.channel().remoteAddress(), cause});
+		String message = String.format(MsgConstant.REQUEST_RECEIVE_EXCEPTION,
+				ctx.channel().remoteAddress(), cause.getMessage());
 
 		// 如果是文件过大的异常
 		if (cause instanceof TooLongFrameException) {
-			message += SpringContextUtil.getMessage("file.receive.size.outmax",
-					new Object[]{});
+			message += MsgConstant.FILE_RECEIVE_SIZE_OUTMAX;
 		}
 
 		// 发送邮件通知管理员
-		noticeUtil.sendNotice(SpringContextUtil.getMessage("recive.exception"), message);
+		noticeUtil.sendNotice(MsgConstant.RECEIVE_EXCEPTION_NOTICE_TITLE, message);
 
 		// 发送回馈信息给客户端
     	writeResponse(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR, message);

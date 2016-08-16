@@ -5,7 +5,6 @@ import com.ancun.task.constant.Constant;
 import com.ancun.task.server.ServerManager;
 import com.ancun.task.utils.HostUtil;
 import com.ancun.task.utils.NoticeUtil;
-import com.ancun.task.utils.SpringContextUtil;
 import com.google.common.util.concurrent.AbstractExecutionThreadService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Service;
@@ -73,13 +72,13 @@ public class UpToYunServer {
             public void terminated(Service.State from) {
 
                 // 构建信息
-                String message = SpringContextUtil.getMessage(Constant.SERVER_STOP_INFO, new Object[]{
+                String message = String.format(Constant.SERVER_STOP_INFO,
                         HostUtil.getIpv4Info().getLocalAddress(),
                         serverName
-                });
+                );
 
                 // 通知管理员
-                noticeUtil.sendNotice(SpringContextUtil.getMessage(Constant.SERVER_EXCEPTION), message);
+                noticeUtil.sendNotice(Constant.SERVER_EXCEPTION, message);
 
                 logger.info(message);
             }
@@ -88,14 +87,14 @@ public class UpToYunServer {
             public void failed(Service.State from, Throwable failure) {
 
                 // 构建信息
-                String message = SpringContextUtil.getMessage(Constant.SERVER_EXCEPTION_INFO, new Object[]{
+                String message = String.format(Constant.SERVER_EXCEPTION_INFO,
                         HostUtil.getIpv4Info().getLocalAddress(),
                         serverName,
                         failure.getCause()
-                });
+                );
 
                 // 通知管理员
-                noticeUtil.sendNotice(SpringContextUtil.getMessage(Constant.SERVER_EXCEPTION), message);
+                noticeUtil.sendNotice(Constant.SERVER_EXCEPTION, message);
 
                 logger.info(message);
             }
