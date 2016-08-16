@@ -1,11 +1,7 @@
 package com.ancun.common.domain.request;
 
-@XmlRootElement(name="request")
-@XmlAccessorType(value = XmlAccessType.FIELD)
 public class ReqBody<T> {
-	@XmlElement
 	private ReqCommon common;
-	@XmlAnyElement(lax=true)
 	private T content;
   
 	public ReqBody() {
