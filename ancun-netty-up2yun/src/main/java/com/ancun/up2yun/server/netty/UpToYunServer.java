@@ -1,13 +1,15 @@
 package com.ancun.up2yun.server.netty;
 
+import com.google.common.util.concurrent.AbstractExecutionThreadService;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.Service;
+
 import com.ancun.netty.httpserver.HttpServer;
 import com.ancun.task.constant.Constant;
 import com.ancun.task.server.ServerManager;
 import com.ancun.task.utils.HostUtil;
 import com.ancun.task.utils.NoticeUtil;
-import com.google.common.util.concurrent.AbstractExecutionThreadService;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.Service;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

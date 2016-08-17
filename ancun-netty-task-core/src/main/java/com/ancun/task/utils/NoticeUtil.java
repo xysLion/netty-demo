@@ -1,26 +1,23 @@
 package com.ancun.task.utils;
 
-import com.ancun.task.constant.Constant;
-import com.ancun.task.domain.request.ReqBody;
-import com.ancun.task.domain.request.ReqCommon;
-import com.ancun.task.domain.request.ReqJson;
-import com.ancun.utils.email.AsynEmailUtil;
-import com.ancun.utils.email.EmailBean;
-import com.ancun.utils.email.Smtp;
-import com.ancun.utils.sms.SmsUtil;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
+
+import com.ancun.task.domain.request.ReqBody;
+import com.ancun.task.domain.request.ReqCommon;
+import com.ancun.task.domain.request.ReqJson;
+
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.MessageSource;
-import org.springframework.context.support.ReloadableResourceBundleMessageSource;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
+
+import javax.annotation.Resource;
 
 /**
  * 发送通知工具类。
@@ -33,7 +30,10 @@ import java.util.logging.Logger;
 @Component
 public class NoticeUtil {
 
-    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(NoticeUtil.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(NoticeUtil.class);
+
+    /** 一天时间毫秒数 */
+    private static final long MILLIS_FOR_ONE_DAY = 24 * 60 * 60 * 1000;
 
     /** 一天开始时间毫秒数 */
     private static long dayStartTimeMillis = 0;
@@ -44,12 +44,25 @@ public class NoticeUtil {
     /** 通知次数 */
     private static long noticeCount = 0;
 
-    /** 一天时间毫秒数 */
-    private static final long MILLIS_FOR_ONE_DAY = 24 * 60 * 60 * 1000;
-
     /** rest请求组件 */
     @Resource
     private RestClient restClient;
+
+    /** 被通知人地址 */
+    @Value("${noticed.email.to}")
+    private String toAddress;
+
+    /** 发送通知服务地址 */
+    @Value("${notice.url}")
+    private String noticeUrl;
+
+    /** 一天最大允许短信通知数 */
+    @Value("${noticed.phone.allow.times}")
+    private long noticedPhoneAllowTimes;
+
+    /** 被通知人电话号码 */
+    @Value("${noticed.phone.number}")
+    private String noticedPhoneNumber;
 
     /** gson对象 */
     private final Gson gson = new Gson();
@@ -62,17 +75,14 @@ public class NoticeUtil {
      */
     public void sendNotice(String subject, String message) {
 
-        // 通知服务器地址
-        String url = SpringContextUtil.getProperty(Constant.NOTICE_URL);
-
         // 基础请求体内容
         Map<String, String> content = baseContent(subject, message);
 
         // 发送短信通知
-        sendSMS(url, content);
+        sendSMS(noticeUrl, content);
 
         // 发送邮件通知
-        sendEMAIL(url, content);
+        sendEMAIL(noticeUrl, content);
     }
 
     /**
@@ -146,20 +156,16 @@ public class NoticeUtil {
         }
 
         // 一天最大允许短信通知数
-        long maxTimes = Long.parseLong(SpringContextUtil.getProperty(Constant.NOTICED_PHONE_ALLOW_TIMES));
         //  如果未达到一天中允许的上限则允许短信通知
-        if (noticeCount < maxTimes) {
-            String phone = SpringContextUtil.getProperty(Constant.NOTICED_PHONE_NUMBER);
-            if (!Strings.isNullOrEmpty(phone)) {
+        if (noticeCount < noticedPhoneAllowTimes && !Strings.isNullOrEmpty(noticedPhoneNumber)) {
 
-                // 请求体内容
-                Map<String, String> smsContent = basecontent;
-                smsContent.put("phoneNo", phone);
-                ReqJson<Map<String, String>> reqJson = creatReqJson("sms", smsContent);
+            // 请求体内容
+            Map<String, String> smsContent = basecontent;
+            smsContent.put("phoneNo", noticedPhoneNumber);
+            ReqJson<Map<String, String>> reqJson = creatReqJson("sms", smsContent);
 
-                // 发送短信通知
-                restClient.post(url, gson.toJson(reqJson), new HashMap<String, Object>());
-            }
+            // 发送短信通知
+            restClient.post(url, gson.toJson(reqJson), new HashMap<String, Object>());
         }
 
     }
@@ -171,9 +177,6 @@ public class NoticeUtil {
      * @param basecontent   请求体基本信息
      */
     private void sendEMAIL(String url, Map<String, String> basecontent){
-
-        // 取得邮件通知地址列表
-        String toAddress = SpringContextUtil.getProperty(Constant.NOTICED_EMAIL_TO);
 
         // 请求体内容
         Map<String, String> emailContent = basecontent;

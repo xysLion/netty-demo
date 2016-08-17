@@ -35,10 +35,10 @@ public class Constant {
     public static final String NOCOMPLETE_TASK_COUNT = "未完成任务信息：%s";
 
     /** 未开始任务数 */
-    public static final String NOSTART_TASK_COUNT = "未开始任务信息：s%";
+    public static final String NOSTART_TASK_COUNT = "未开始任务信息：%s";
 
     /** 执行中任务数 */
-    public static final String HANDLING_TASK_COUNT = "执行中任务信息：s%";
+    public static final String HANDLING_TASK_COUNT = "执行中任务信息：%s";
 
     /** 上传组件日常监控 */
     public static final String UPLOAD_MONITOR = "上传组件日常监控";
@@ -47,8 +47,8 @@ public class Constant {
     public static final String SERVER_EXCEPTION = "上传组件异常";
 
     /** 服务停止信息 */
-    public static final String SERVER_STOP_INFO = "服务器节点[s%]上,[s%]服务停止";
+    public static final String SERVER_STOP_INFO = "服务器节点[%s]上,[%s]服务停止";
 
     /** 服务异常信息 */
-    public static final String SERVER_EXCEPTION_INFO = "服务器节点[s%]上,[s%]服务发生异常，cause：s%";
+    public static final String SERVER_EXCEPTION_INFO = "服务器节点[%s]上,[%s]服务发生异常，cause：%s";
 }

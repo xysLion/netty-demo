@@ -1,24 +1,30 @@
 package com.ancun.up2yun.task;
 
+import com.google.common.eventbus.EventBus;
+import com.google.gson.Gson;
+
 import com.ancun.task.constant.ProcessEnum;
 import com.ancun.task.constant.TaskHandleTimeEnum;
 import com.ancun.task.dao.TaskDao;
 import com.ancun.task.entity.Task;
 import com.ancun.task.task.HandleTask;
 import com.ancun.task.task.TaskBus;
-import com.ancun.task.utils.*;
+import com.ancun.task.utils.HostUtil;
+import com.ancun.task.utils.NoticeUtil;
+import com.ancun.task.utils.StringUtil;
+import com.ancun.task.utils.TaskUtil;
 import com.ancun.up2yun.constant.BussinessConstant;
 import com.ancun.up2yun.constant.MsgConstant;
 import com.ancun.up2yun.constant.StatusEnum;
 import com.ancun.up2yun.event.Up2YunEvent;
 import com.ancun.up2yun.listener.Up2YunListener;
 import com.ancun.utils.DESUtils;
-import com.google.common.eventbus.EventBus;
-import com.google.gson.Gson;
+
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -52,6 +58,14 @@ public class Up2YunTaskHandler {
 
     /** 通知组件 */
     private final NoticeUtil noticeUtil;
+
+    /** 默认重试次数 */
+    @Value("${retry.times:3}")
+    private int defaultRetryTimes;
+
+    /** 机子唯一编码代号 */
+    @Value("${process.num}")
+    private int processNum;
 
     /**
      * 创建实例，并将自己注册到任务总线{@link TaskBus}
@@ -99,7 +113,7 @@ public class Up2YunTaskHandler {
             // 接收文件请求结束
             long endPostTime = System.currentTimeMillis();
             logger.info("文件 ：[{}] 发送上传到云事件总共花费时间：{}ms",
-                    TaskUtil.getValue(taskParams, SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
+                    TaskUtil.getValue(taskParams, BussinessConstant.FILE_KEY),
                     (endPostTime - beginTime));
 
             // 如果MD5值一致则上传成功
@@ -113,7 +127,7 @@ public class Up2YunTaskHandler {
                 taskParams.put("uploadTime", df.format(new Date()));
 
                 // 上传成功发送回复信息
-                String callbackUri = TaskUtil.getValue(taskParams, SpringContextUtil.getProperty(BussinessConstant.CALLBACK_URI));
+                String callbackUri = TaskUtil.getValue(taskParams, BussinessConstant.CALLBACK_URI);
                 if (callbackUri != null && !"".equals(callbackUri)) {
                     callbackFlg = true;
                 }
@@ -127,7 +141,7 @@ public class Up2YunTaskHandler {
                 // 如果不需要回调，则直接提示成功
                 logger.info("文件[{0}]在服务器节点[{1}]上{2}！",
                         new Object[]{TaskUtil.getValue(taskParams,
-                                SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
+                                BussinessConstant.FILE_KEY),
                                 HostUtil.getIpv4Info().getLocalAddress(), callbackResult});
             }
             // 否则重试
@@ -149,10 +163,9 @@ public class Up2YunTaskHandler {
         if (retryFlg) {
 
             // 失败重试
-            int defaultRetryTimes = Integer.valueOf(SpringContextUtil.getProperty(BussinessConstant.RETRY_TIMES));
             int retryTimes = task.getRetryCount();
             // 上传成功发送回复信息
-            String callbackUri = TaskUtil.getValue(taskParams, SpringContextUtil.getProperty(BussinessConstant.CALLBACK_URI));
+            String callbackUri = TaskUtil.getValue(taskParams, BussinessConstant.CALLBACK_URI);
             // 已经重试了3次，还是失败并且需要发送回调信息
             if(retryTimes > defaultRetryTimes && (callbackUri != null && !"".equals(callbackUri))){
                 callbackFlg = true;
@@ -163,7 +176,7 @@ public class Up2YunTaskHandler {
 
                 String message = String.format(MsgConstant.FILE_UPLOAD_FAILURE,
                         new Object[]{TaskUtil.getValue(taskParams,
-                                SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
+                                BussinessConstant.FILE_KEY),
                                 HostUtil.getIpv4Info().getLocalAddress(),
                                 callbackResult,
                                 getYunInfo(taskParams),
@@ -179,7 +192,7 @@ public class Up2YunTaskHandler {
 
                 logger.info("文件[{}]在服务器节点[{}]上{}，上传到云的信息[{}]，已添加重试上传任务队列。",
                         new Object[]{TaskUtil.getValue(taskParams,
-                                SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
+                                BussinessConstant.FILE_KEY),
                                 HostUtil.getIpv4Info().getLocalAddress(),
                                 callbackResult,
                                 getYunInfo(taskParams)
@@ -194,7 +207,7 @@ public class Up2YunTaskHandler {
             task.setTaskId(String.valueOf(UUID.randomUUID()));
             task.setReqUrl(HostUtil.getIpv4Info().getLocalAddress());
             // 接收方uri
-            String uri = TaskUtil.getValue(taskParams, SpringContextUtil.getProperty(BussinessConstant.CALLBACK_URI));
+            String uri = TaskUtil.getValue(taskParams, BussinessConstant.CALLBACK_URI);
             // uri解密
             uri = StringUtil.isBlank(uri)?uri: DESUtils.decrypt(uri, null);
             task.setRevUrl(uri);
@@ -202,7 +215,7 @@ public class Up2YunTaskHandler {
             taskParams.put("callbackCode", callbackCode);
             task.setTaskParams(new Gson().toJson(taskParams));
             task.setParamsMap(taskParams);
-            task.setComputeNum(Integer.parseInt(SpringContextUtil.getProperty(BussinessConstant.PROCESS_NUM)));
+            task.setComputeNum(processNum);
             task.setTaskHandler(BussinessConstant.CALLBACK);
             task.setTaskStatus(ProcessEnum.PROCESSING.getNum());
             task.setGmtCreate(new Timestamp(System.currentTimeMillis()));
@@ -212,17 +225,17 @@ public class Up2YunTaskHandler {
 
             logger.info("文件[{}]在服务器节点[{}]上添加进发送回调信息任务队列。",
                     new Object[]{TaskUtil.getValue(taskParams,
-                            SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
+                            BussinessConstant.FILE_KEY),
                             HostUtil.getIpv4Info().getLocalAddress()});
         }
 
         // 接收文件请求结束
         long endTime = System.currentTimeMillis();
         logger.info("文件 ：[{}] 上传队列中上传任务执行结束：{}",
-                TaskUtil.getValue(taskParams, SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
+                TaskUtil.getValue(taskParams, BussinessConstant.FILE_KEY),
                 endTime);
         logger.info("文件 ：[{}] 上传任务执行总共花费时间：{}ms",
-                TaskUtil.getValue(taskParams, SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
+                TaskUtil.getValue(taskParams, BussinessConstant.FILE_KEY),
                 ( endTime - beginTime ));
     }
 

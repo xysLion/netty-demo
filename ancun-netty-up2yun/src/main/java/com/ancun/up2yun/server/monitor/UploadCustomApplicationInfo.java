@@ -2,9 +2,10 @@ package com.ancun.up2yun.server.monitor;
 
 import com.ancun.task.server.monitor.CustomApplicationInfo;
 import com.ancun.task.utils.HostUtil;
-import com.ancun.task.utils.SpringContextUtil;
 import com.ancun.up2yun.constant.MsgConstant;
+
 import org.apache.commons.io.FileUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +23,10 @@ import java.io.File;
 @Component
 public class UploadCustomApplicationInfo extends CustomApplicationInfo {
 
+    /** 临时文件夹路径 */
+    @Value("${tempdir}")
+    private String tempDir;
+
     /**
      * 提供上传组件服务器节点临时文件夹容量信息
      *
@@ -30,8 +35,6 @@ public class UploadCustomApplicationInfo extends CustomApplicationInfo {
     @Override
     public String supplyCustomApplicationInfo() {
 
-        // 临时文件夹路径
-        String tempDir = SpringContextUtil.getProperty("tempdir");
         File file = new File(tempDir);
         // 已用的空间
         long usedSize = FileUtils.sizeOfDirectory(file);

@@ -11,40 +11,25 @@ package com.ancun.up2yun.constant;
 public class BussinessConstant {
 
     /** 用户meta信息前缀 */
-    public static final String USER_META_INFO_PREFIX = "user_meta_info_prefix";
+    public static final String USER_META_INFO_PREFIX = "x-oss-meta-";
 
     /** 上传OSS时显示文件名 */
-    public static final String FILE_KEY = "FILE_KEY";
+    public static final String FILE_KEY = "fileKey";
+
+    /** 文件路径标记 */
+    public static final String FILE_NAME = "file_name";
 
     /** 本上传组件标识 */
     public static final String PROCESS_NUM = "process.num";
 
-    /**  上传文件缓存临时目录 */
-    public static final String TEMP_DIR = "tempdir";
-
-    /**  是否启动只扫描本机 0:只扫描本机 1:扫描所有 */
-    public static final String LOCATION_ONLY = "location.only";
-
     /**  回调参数名 */
-    public static final String CALLBACK_URI = "CALLBACK_URI";
+    public static final String CALLBACK_URI = "callbackUri";
 
     /**  重试次数 */
     public static final String RETRY_TIMES = "retry.times";
 
-    /**  上传云的BUCKET */
-    public static final String BUCKET_SUFFIX = "BUCKET_SUFFIX";
-
-    /**  上传云的accessId */
-    public static final String ACCESSID_SUFFIX = "ACCESSID_SUFFIX";
-
-    /**  上传云的accessKey */
-    public static final String ACCESSKEY_SUFFIX = "ACCESSKEY_SUFFIX";
-
-    /**  上传云的类别 */
-    public static final String YUN_TYPE = "YUN_TYPE";
-
     /**  文件md5参数名 */
-    public static final String FILE_MD5 = "FILE_MD5";
+    public static final String FILE_MD5 = "fileMd5";
 
     /**  时间格式 */
     public static final String DEFAULT_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";

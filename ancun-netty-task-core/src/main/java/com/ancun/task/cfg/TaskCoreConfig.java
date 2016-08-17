@@ -1,20 +1,27 @@
 package com.ancun.task.cfg;
 
-import com.ancun.task.listener.TaskListener;
-import com.ancun.task.task.TaskBus;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.DeadEvent;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+
+import com.ancun.task.listener.TaskListener;
+import com.ancun.task.task.TaskBus;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 
-import javax.annotation.Resource;
 import java.util.List;
+
+import javax.annotation.Resource;
 
 /**
  * task-core共通配置类
@@ -35,6 +42,10 @@ public class TaskCoreConfig {
     /** 业务调度线程池大小 */
     @Value("${business.thread.count}")
     private int businessCount;
+
+    /** 任务执行间隔时间 */
+    @Value("${duration}")
+    private long duration;
 
     /**
      * 注入guava事件总线
@@ -76,7 +87,7 @@ public class TaskCoreConfig {
      */
     @Bean
     public TaskListener taskListener() {
-        return new TaskListener(eventBus(), taskBus());
+        return new TaskListener(eventBus(), taskBus(), duration);
     }
 
     /** 默认消息文件数组 */

@@ -1,5 +1,8 @@
 package com.ancun.up2yun.task;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import com.ancun.task.dao.TaskDao;
 import com.ancun.task.domain.request.ReqBody;
 import com.ancun.task.domain.request.ReqCommon;
@@ -7,16 +10,21 @@ import com.ancun.task.domain.response.RespJson;
 import com.ancun.task.entity.Task;
 import com.ancun.task.task.HandleTask;
 import com.ancun.task.task.TaskBus;
-import com.ancun.task.utils.*;
+import com.ancun.task.utils.HmacSha1Util;
+import com.ancun.task.utils.HostUtil;
+import com.ancun.task.utils.MD5Util;
+import com.ancun.task.utils.NoticeUtil;
+import com.ancun.task.utils.RestClient;
+import com.ancun.task.utils.TaskUtil;
 import com.ancun.up2yun.constant.BussinessConstant;
 import com.ancun.up2yun.constant.MsgConstant;
 import com.ancun.up2yun.constant.ResponseConst;
 import com.ancun.utils.DESUtils;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Type;
@@ -54,6 +62,10 @@ public class CallbackHandler {
     /** 通知组件 */
     private final NoticeUtil noticeUtil;
 
+    /** 默认重试次数 */
+    @Value("${retry.times:3}")
+    private int defaultRetryTimes;
+
     @Autowired
     public CallbackHandler(TaskBus taskBus, TaskDao taskDao, RestClient restClient, NoticeUtil noticeUtil) {
         taskBus.register(this);
@@ -80,7 +92,7 @@ public class CallbackHandler {
         long beginTime = System.currentTimeMillis();
 
         // 执行post方法
-        String uri = TaskUtil.getValue(taskParams, SpringContextUtil.getProperty(BussinessConstant.CALLBACK_URI));
+        String uri = TaskUtil.getValue(taskParams, BussinessConstant.CALLBACK_URI);
         // uri解密
         uri = DESUtils.decrypt(uri, null);
 
@@ -92,7 +104,7 @@ public class CallbackHandler {
             // 接收文件请求结束
             long endPostTime = System.currentTimeMillis();
             logger.info("文件 ：[{}] 发送回调请求总共花费时间：{}ms",
-                    TaskUtil.getValue(taskParams, SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
+                    TaskUtil.getValue(taskParams, BussinessConstant.FILE_KEY),
                     (endPostTime - beginTime));
 
             // 响应相应不成功
@@ -107,7 +119,7 @@ public class CallbackHandler {
                 // 回调成功
                 taskDao.success(task);
                 logger.info(String.format(MsgConstant.SERVER_CALLBACK_SUCCESS,
-                        new Object[]{TaskUtil.getValue(taskParams, SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
+                        new Object[]{TaskUtil.getValue(taskParams, BussinessConstant.FILE_KEY),
                                 HostUtil.getIpv4Info().getLocalAddress(), uri}));
             }
 
@@ -123,7 +135,6 @@ public class CallbackHandler {
         if (retryFlg) {
 
             // 失败重试
-            int defaultRetryTimes = Integer.valueOf(SpringContextUtil.getProperty(BussinessConstant.RETRY_TIMES));
             int retryTimes = task.getRetryCount();
             // 已经重试了3次，还是失败并且需要发送邮件或者短信通知
             if (retryTimes > defaultRetryTimes) {
@@ -132,7 +143,7 @@ public class CallbackHandler {
                 taskDao.fail(task);
 
                String message = String.format(MsgConstant.SERVER_CALLBACK_FAILURE,
-                        new Object[]{TaskUtil.getValue(taskParams, SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
+                        new Object[]{TaskUtil.getValue(taskParams, BussinessConstant.FILE_KEY),
                                 HostUtil.getIpv4Info().getLocalAddress(),
                                 uri,
                                 getCallbackServerInfo(taskParams),
@@ -151,7 +162,7 @@ public class CallbackHandler {
                 taskDao.retry(task);
 
                 logger.info("文件[{}]在服务器节点[{1}]上向回调服务器[{}]发送回调请求不成功，回调服务器基础信息[{}]，已添加发送回调请求任务队列！",
-                        new Object[]{TaskUtil.getValue(taskParams, SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
+                        new Object[]{TaskUtil.getValue(taskParams, BussinessConstant.FILE_KEY),
                                 HostUtil.getIpv4Info().getLocalAddress(), uri, getCallbackServerInfo(taskParams) });
             }
         }
@@ -159,10 +170,10 @@ public class CallbackHandler {
         // 回调任务执行结束
         long endTime = System.currentTimeMillis();
         logger.info("文件 ：[{}] 回调队列中回调任务执行结束：{}",
-                TaskUtil.getValue(taskParams, SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
+                TaskUtil.getValue(taskParams, BussinessConstant.FILE_KEY),
                 endTime);
         logger.info("文件 ：[{}] 回调任务执行总共花费时间：{}ms",
-                TaskUtil.getValue(taskParams, SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
+                TaskUtil.getValue(taskParams, BussinessConstant.FILE_KEY),
                 ( endTime - beginTime ));
 
     }

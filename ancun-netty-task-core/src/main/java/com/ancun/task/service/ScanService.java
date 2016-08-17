@@ -1,17 +1,17 @@
 package com.ancun.task.service;
 
-import com.ancun.task.constant.Constant;
 import com.ancun.task.dao.TaskDao;
 import com.ancun.task.entity.Task;
 import com.ancun.task.entity.TaskStatusInfo;
-import com.ancun.task.utils.SpringContextUtil;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.Resource;
 import java.sql.Timestamp;
 import java.util.List;
+
+import javax.annotation.Resource;
 
 /**
  * 扫描未完成任务
@@ -26,6 +26,10 @@ public class ScanService {
 
 	@Value("${statustask.perion.seconds}")
 	private long statusPeriod;
+
+    /** 一次执行最大任务数 */
+    @Value("${task.max.num}")
+    private long taskMaxNum;
 	
     @Resource(name = "taskDao")
     private TaskDao taskDao;
@@ -57,7 +61,7 @@ public class ScanService {
         }
         sql.append(" order by gmt_create ");
         sql.append(" limit ");
-        sql.append(SpringContextUtil.getProperty(Constant.TASK_MAX_NUM));
+        sql.append(taskMaxNum);
 
         return taskDao.selectTasks(sql.toString());
     }

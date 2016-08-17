@@ -1,10 +1,9 @@
 package com.ancun.up2yun.strategy;
 
 import com.ancun.task.strategy.Strategy;
-import com.ancun.task.utils.SpringContextUtil;
-import com.ancun.up2yun.constant.BussinessConstant;
 import com.ancun.up2yun.constant.ScanTypeEnum;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
@@ -18,6 +17,14 @@ import org.springframework.stereotype.Component;
 @Component(value = "defaultStrategy")
 public class DefaultStrategy implements Strategy {
 
+    /** 机子唯一编码代号 */
+    @Value("${process.num}")
+	private int processNum;
+
+    /** 是否只扫描本地 */
+    @Value("${location.only}")
+    private int localOnly;
+
 	/**
 	 * 取得条件SQL
 	 *
@@ -27,8 +34,7 @@ public class DefaultStrategy implements Strategy {
 	public String getStrategy() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(" and compute_num = ");
-		sb.append(SpringContextUtil.getProperty(BussinessConstant.PROCESS_NUM));
-		return Integer.parseInt(SpringContextUtil.getProperty(BussinessConstant.LOCATION_ONLY)) == ScanTypeEnum.SCANLOCALONLY
-		        .getNum() ? sb.toString() : "";
+		sb.append(processNum);
+		return localOnly == ScanTypeEnum.SCANLOCALONLY.getNum() ? sb.toString() : "";
 	}
 }

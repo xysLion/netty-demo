@@ -1,35 +1,28 @@
 package com.ancun.up2yun.handlers;
 
-import com.ancun.task.constant.ProcessEnum;
-import com.ancun.task.dao.TaskDao;
-import com.ancun.task.entity.Task;
-import com.ancun.task.event.InQueneEvent;
-import com.ancun.task.utils.*;
-import com.ancun.up2yun.constant.BussinessConstant;
-import com.ancun.up2yun.constant.MsgConstant;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.eventbus.EventBus;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.TooLongFrameException;
-import io.netty.handler.codec.http.*;
-import io.netty.handler.codec.http.multipart.*;
-import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder.EndOfDataDecoderException;
-import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType;
-import io.netty.util.CharsetUtil;
+
+import com.ancun.task.constant.ProcessEnum;
+import com.ancun.task.dao.TaskDao;
+import com.ancun.task.entity.Task;
+import com.ancun.task.event.InQueneEvent;
+import com.ancun.task.utils.HostUtil;
+import com.ancun.task.utils.MD5Util;
+import com.ancun.task.utils.NoticeUtil;
+import com.ancun.task.utils.TaskUtil;
+import com.ancun.up2yun.constant.BussinessConstant;
+import com.ancun.up2yun.constant.MsgConstant;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -37,6 +30,34 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
+
+import javax.annotation.Resource;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.codec.TooLongFrameException;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpContent;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpObject;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.LastHttpContent;
+import io.netty.handler.codec.http.multipart.Attribute;
+import io.netty.handler.codec.http.multipart.DefaultHttpDataFactory;
+import io.netty.handler.codec.http.multipart.FileUpload;
+import io.netty.handler.codec.http.multipart.HttpDataFactory;
+import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
+import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder.EndOfDataDecoderException;
+import io.netty.handler.codec.http.multipart.InterfaceHttpData;
+import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType;
+import io.netty.util.CharsetUtil;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
@@ -59,9 +80,6 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
 	private static final String MONITOR_RESPONSE = "OK";
 
 	/** 文件路径标记 */
-	private static final String FILE_NAME = "file_name";
-
-	/** 文件路径标记 */
 	private static final String FILE_PATH = "file_path";
 
 	private static final HttpDataFactory factory = new DefaultHttpDataFactory(DefaultHttpDataFactory.MINSIZE);
@@ -81,6 +99,14 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
 	/** 通知组件 */
     @Resource
     private NoticeUtil noticeUtil;
+
+    /** 机子编号 */
+    @Value("${process.num}")
+	private int processNum;
+
+    /** 文件保存零时路径 */
+    @Value("${tempdir}")
+    private String tempDir;
 
 	/** 执行任务所需的参数 */
 	private Map<String, Object> taskParams = new HashMap<String, Object>();
@@ -114,7 +140,7 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
     		// 设置用户meta信息
     		Map<String, String> metadata = new HashMap<String, String>();
     		for (Entry<String, String> entry : request.headers()) {
-    			if (entry.getKey().startsWith(SpringContextUtil.getProperty(BussinessConstant.USER_META_INFO_PREFIX))) {
+    			if (entry.getKey().startsWith(BussinessConstant.USER_META_INFO_PREFIX)) {
     				metadata.put(entry.getKey(), entry.getValue());
     			}
             }
@@ -168,9 +194,9 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
 				}
 
 				// 如果上传到OSS的Key为空则用文件名
-				if (taskParams.get(SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)) == null
-						|| "".equals(taskParams.get(SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)).toString())) {
-					taskParams.put(SpringContextUtil.getProperty(BussinessConstant.FILE_KEY), taskParams.get("file_name").toString());
+				if (taskParams.get(BussinessConstant.FILE_KEY) == null
+						|| "".equals(taskParams.get(BussinessConstant.FILE_KEY).toString())) {
+					taskParams.put(BussinessConstant.FILE_KEY, taskParams.get(BussinessConstant.FILE_NAME).toString());
 				}
 
 				// 开始持久化数据(将任务持久化到数据库)
@@ -184,7 +210,7 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
 				task.setRevUrl(HostUtil.getIpv4Info().getLocalAddress());
 				task.setTaskParams(new Gson().toJson(taskParams));
 				task.setParamsMap(taskParams);
-				task.setComputeNum(Integer.parseInt(SpringContextUtil.getProperty(BussinessConstant.PROCESS_NUM)));
+				task.setComputeNum(processNum);
 				task.setTaskHandler(BussinessConstant.UPTOYUN);
 				task.setTaskStatus(ProcessEnum.PROCESSING.getNum());
 				task.setGmtCreate(new Timestamp(System.currentTimeMillis()));
@@ -195,7 +221,7 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
 				// 接收文件请求结束
 				long endSaveTaskTime = System.currentTimeMillis();
 				logger.info("文件 ：[{}] 持久化数据(将任务持久化到数据库)总共花费时间：{}ms", new Object[] {
-						taskParams.get(SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
+						taskParams.get(BussinessConstant.FILE_KEY),
 						(endSaveTaskTime - beginSaveTaskTime)});
 
 				// 反馈消息给客户端
@@ -205,7 +231,7 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
 				// 反馈消息给客户端
 				long endResponseTime = System.currentTimeMillis();
 				logger.info("文件 ：[{}] 反馈消息给客户端总共花费时间：{}ms", new Object[]{
-						taskParams.get(SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
+						taskParams.get(BussinessConstant.FILE_KEY),
 						(endResponseTime - beginTime)});
 
 				// 发送添加任务事件
@@ -217,10 +243,10 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
 				// 接收文件请求结束
 				long endTime = System.currentTimeMillis();
 				logger.info("文件 ：[{}] 发送添加任务事件总共花费时间：{}ms", new Object[]{
-						taskParams.get(SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
+						taskParams.get(BussinessConstant.FILE_KEY),
 						( endTime - beginInQueneTime )});
 				logger.info("文件 ：[{}] 接收文件请求总共花费时间：{}ms", new Object[]{
-						taskParams.get(SpringContextUtil.getProperty(BussinessConstant.FILE_KEY)),
+						taskParams.get(BussinessConstant.FILE_KEY),
 						( endTime - beginTime )});
 
                 return;
@@ -273,14 +299,14 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
             FileUpload fileUpload = (FileUpload) data;
             if (fileUpload.isCompleted()) {
 
-				taskParams.put(FILE_NAME, fileUpload.getFilename());
+				taskParams.put(BussinessConstant.FILE_NAME, fileUpload.getFilename());
 
 				beginTime = System.currentTimeMillis();
 //				logger.info("文件 ：[" + fileUpload.getFilename() + "] 接收开始：" + beginTime);
 				logger.info("文件 ：[{}] 接收开始：{}", fileUpload.getFilename(), beginTime);
 
 				StringBuffer fileNameBuf = new StringBuffer();
-				fileNameBuf.append(SpringContextUtil.getProperty(BussinessConstant.TEMP_DIR));
+				fileNameBuf.append(tempDir);
 
 				// 如果文件夹不存在
 				File dir = new File(fileNameBuf.toString());
@@ -321,7 +347,7 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
     	resultStr.append(String.format(MsgConstant.SERVER_NODE_INFO, HostUtil.getIpv4Info().getLocalAddress()));
     	if(httpResponseStatus.code() == HttpResponseStatus.OK.code()) {
     		resultStr.append(String.format(MsgConstant.FILE_RECEIVE_SUCCESS, ctx.channel().remoteAddress().toString(),
-							taskParams.get(SpringContextUtil.getProperty(BussinessConstant.FILE_KEY))));
+							taskParams.get(BussinessConstant.FILE_KEY)));
     	} else if(httpResponseStatus.code() == HttpResponseStatus.INTERNAL_SERVER_ERROR.code()) {
     		resultStr.append(String.format(MsgConstant.REQUEST_RECEIVE_EXCEPTION,
 					ctx.channel().remoteAddress().toString(), returnMsg ));
@@ -357,8 +383,7 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
 		String result = null;
 
 		// 取得源文件MD5
-		String md5Source = TaskUtil.getValue(taskParams,
-				SpringContextUtil.getProperty(BussinessConstant.FILE_MD5));
+		String md5Source = TaskUtil.getValue(taskParams, BussinessConstant.FILE_MD5);
 		// 如果MD5不存在
 		if (Strings.isNullOrEmpty(md5Source)) {
 //			writeResponse(ctx, HttpResponseStatus.PRECONDITION_FAILED, "文件MD5参数不能为空！");
