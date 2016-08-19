@@ -22,7 +22,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.Inet4Address;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
@@ -56,7 +55,6 @@ import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder.EndOfDataDec
 import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType;
 import io.netty.util.CharsetUtil;
-import io.netty.util.NetUtil;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
@@ -83,8 +81,6 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
 	private static final String FILE_PATH = "file_path";
 
 	private static final HttpDataFactory factory = new DefaultHttpDataFactory(DefaultHttpDataFactory.MINSIZE);
-
-	private static final Inet4Address LOCALHOST4 = NetUtil.LOCALHOST4;
 
 	private HttpRequest request = null;
 
@@ -280,7 +276,6 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
 				taskParams.put(BussinessConstant.FILE_NAME, fileUpload.getFilename());
 
 				beginTime = System.currentTimeMillis();
-//				logger.info("文件 ：[" + fileUpload.getFilename() + "] 接收开始：" + beginTime);
 				logger.info("文件 ：[{}] 接收开始：{}", fileUpload.getFilename(), beginTime);
 
 				StringBuffer fileNameBuf = new StringBuffer();

@@ -6,7 +6,7 @@
 
     <groupId>com.ancun</groupId>
     <artifactId>ancun-netty-up2yun</artifactId>
-    <version>1.1.0-SNAPSHOT</version>
+    <version>1.1.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>ancun-netty-up2yun</name>
@@ -22,6 +22,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <io.netty.version>4.0.25.Final</io.netty.version>
         <guava.version>19.0</guava.version>
+        <gson.version>2.3.1</gson.version>
+        <start-class>com.ancun.up2yun.FileApp</start-class>
     </properties>
 
     <dependencies>
@@ -59,49 +61,17 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- 任务模块包 -->
-        <!--<dependency>-->
-            <!--<groupId>com.ancun</groupId>-->
-            <!--<artifactId>ancun-netty-task-core</artifactId>-->
-            <!--<version>1.1.0-SNAPSHOT</version>-->
-            <!--<exclusions>-->
-                <!--<exclusion>-->
-                    <!--<groupId>org.springframework</groupId>-->
-                    <!--<artifactId>spring-core</artifactId>-->
-                <!--</exclusion>-->
-                <!--<exclusion>-->
-                    <!--<groupId>org.springframework</groupId>-->
-                    <!--<artifactId>spring-context</artifactId>-->
-                <!--</exclusion>-->
-                <!--<exclusion>-->
-                    <!--<groupId>org.springframework</groupId>-->
-                    <!--<artifactId>spring-web</artifactId>-->
-                <!--</exclusion>-->
-            <!--</exclusions>-->
-        <!--</dependency>-->
-
-        <!-- 第三方工具类包 -->
-        <dependency>
-            <groupId>ancun</groupId>
-            <artifactId>ancun-thirdparty</artifactId>
-            <version>1.0</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>slf4j-log4j12</artifactId>
-                    <groupId>org.slf4j</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>slf4j-api</artifactId>
-                    <groupId>org.slf4j</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
         <!-- ancun-netty包 -->
         <dependency>
             <groupId>com.ancun</groupId>
             <artifactId>ancun-netty</artifactId>
             <version>1.1.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>${gson.version}</version>
         </dependency>
 
         <dependency>
@@ -115,60 +85,23 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
-                <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
-                    <encoding>UTF-8</encoding>
-                </configuration>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>springloaded</artifactId>
+                        <version>1.2.5.RELEASE</version>
+                    </dependency>
+                </dependencies>
             </plugin>
-
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>appassembler-maven-plugin</artifactId>
-                <version>1.8.1</version>
-
-                <configuration>
-                    <configurationDirectory>resources</configurationDirectory>
-                    <copyConfigurationDirectory>true</copyConfigurationDirectory>
-                    <configurationSourceDirectory>src/main/resources/</configurationSourceDirectory>
-
-                    <useWildcardClassPath>true</useWildcardClassPath>
-                    <repositoryLayout>flat</repositoryLayout>
-                    <repositoryName>lib</repositoryName>
-                    <assembleDirectory>${project.build.directory}/up2yun</assembleDirectory>
-
-                    <binFileExtensions>
-                        <unix>.sh</unix>
-                    </binFileExtensions>
-                    <platforms>
-                        <platform>windows</platform>
-                        <platform>unix</platform>
-                    </platforms>
-                    <programs>
-                        <program>
-                            <name>startup</name>
-                            <mainClass>com.ancun.up2yun.boot.ServerBootstrap</mainClass>
-                            <commandLineArguments>
-                            </commandLineArguments>
-                            <jvmSettings>
-                                <initialMemorySize>20m</initialMemorySize>
-                                <maxMemorySize>256m</maxMemorySize>
-                                <maxStackSize>128m</maxStackSize>
-                                <!--<maxDirectMemorySize>256</maxDirectMemorySize>-->
-                                <extraArguments>
-                                    <extraArgument>-Dtest=false</extraArgument>
-                                    <extraArgument>-Dlog4j.properties=false</extraArgument>
-                                    <extraArgument>-Dup2yun.home=$BASEDIR/resources</extraArgument>
-                                </extraArguments>
-                            </jvmSettings>
-                        </program>
-                    </programs>
-                </configuration>
-            </plugin>
-
         </plugins>
     </build>
 
