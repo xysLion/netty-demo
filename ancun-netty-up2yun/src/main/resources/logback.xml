@@ -1,39 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="false">
 
-    <!-- 日志目录路径 -->
-    <property name="logDir" value="E:\\logs\\up2yun"/>
+    <!-- spring boot logging 的基础配置 -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml" />
 
-    <!-- 日志最大的历史 30天 -->
-    <property name="maxHistory" value="30"/>
+    <!-- 文件保存路径配置 -->
+    <property name="LOG_PATH" value="${LOG_PATH:-${LOG_TEMP:-${java.io.tmpdir:-/tmp}}}" />
+
+    <!-- 日志输出到控制台 -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
         </encoder>
     </appender>
 
-    <!-- INFO级别日志 appender -->  
-    <appender name="INFO" class="ch.qos.logback.core.rolling.RollingFileAppender">  
-        <!-- 过滤器，只记录INFO级别的日志 -->  
-        <!--<filter class="ch.qos.logback.classic.filter.LevelFilter">  -->
-            <!--<level>INFO</level>  -->
-            <!--<onMatch>ACCEPT</onMatch>  -->
-            <!--<onMismatch>DENY</onMismatch>  -->
-        <!--</filter>  -->
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">  
-            <!-- 按天回滚 daily -->  
-            <fileNamePattern>${logDir}/%d{yyyy-MM-dd}/info.log</fileNamePattern>
+    <!-- 日志输出到文件 -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- 按天回滚 daily -->
+            <fileNamePattern>${LOG_PATH}/%d{yyyy-MM-dd}/info.log</fileNamePattern>
             <!-- 日志最大的历史 30天 -->
-            <maxHistory>${maxHistory}</maxHistory>  
-        </rollingPolicy>  
-        <encoder>  
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>  
-        </encoder>  
-    </appender>  
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
+        </encoder>
+    </appender>
 
     <root level="${logLevel:-INFO}">
         <appender-ref ref="STDOUT" />
-        <appender-ref ref="INFO" />
+        <appender-ref ref="FILE" />
     </root>
-
-    <!--<logger name="com.ancun.task.scheduled.ScanTaskScheduledThread" level="${log.level.ancun:-DEBUG}" />-->
 </configuration>

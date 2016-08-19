@@ -1,4 +1,4 @@
-package com.ancun.up2yun.task;
+package com.ancun.task.task;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;

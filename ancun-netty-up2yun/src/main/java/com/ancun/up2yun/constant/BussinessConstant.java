@@ -40,4 +40,7 @@ public class BussinessConstant {
     /** 将上传结果通知回调方 */
     public static final int CALLBACK = 1;
 
+    /** 任务为处理 */
+    public static final int UN_PROCESS = 0;
+
 }

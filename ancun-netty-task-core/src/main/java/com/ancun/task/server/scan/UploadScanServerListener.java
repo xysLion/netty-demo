@@ -1,10 +1,11 @@
-package com.ancun.up2yun.server.scan;
+package com.ancun.task.server.scan;
+
+import com.google.common.util.concurrent.Service;
 
 import com.ancun.task.constant.Constant;
-import com.ancun.task.server.scan.ScanServerListener;
 import com.ancun.task.utils.HostUtil;
 import com.ancun.task.utils.NoticeUtil;
-import com.google.common.util.concurrent.Service;
+
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 

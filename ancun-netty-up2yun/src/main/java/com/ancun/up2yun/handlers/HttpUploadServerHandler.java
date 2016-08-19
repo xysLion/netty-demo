@@ -2,29 +2,27 @@ package com.ancun.up2yun.handlers;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
-import com.google.common.eventbus.EventBus;
+import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
 
-import com.ancun.task.constant.ProcessEnum;
-import com.ancun.task.dao.TaskDao;
-import com.ancun.task.entity.Task;
-import com.ancun.task.event.InQueneEvent;
-import com.ancun.task.utils.HostUtil;
-import com.ancun.task.utils.MD5Util;
-import com.ancun.task.utils.NoticeUtil;
-import com.ancun.task.utils.TaskUtil;
+import com.ancun.up2yun.cfg.NettyProperties;
 import com.ancun.up2yun.constant.BussinessConstant;
 import com.ancun.up2yun.constant.MsgConstant;
+import com.ancun.up2yun.domain.task.Task;
+import com.ancun.up2yun.domain.task.TaskDao;
+import com.ancun.up2yun.utils.HostUtil;
+import com.ancun.up2yun.utils.NoticeUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.Inet4Address;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,6 +56,7 @@ import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder.EndOfDataDec
 import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType;
 import io.netty.util.CharsetUtil;
+import io.netty.util.NetUtil;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
@@ -72,6 +71,7 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
  */
 @Component(value = "httpUploadServerHandler")
 @ChannelHandler.Sharable
+@EnableConfigurationProperties({NettyProperties.class})
 public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObject> {
 
 	private static final Logger logger = LoggerFactory.getLogger(HttpUploadServerHandler.class);
@@ -84,29 +84,22 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
 
 	private static final HttpDataFactory factory = new DefaultHttpDataFactory(DefaultHttpDataFactory.MINSIZE);
 
+	private static final Inet4Address LOCALHOST4 = NetUtil.LOCALHOST4;
+
 	private HttpRequest request = null;
 
 	private HttpPostRequestDecoder decoder;
+
+    @Resource
+    private NettyProperties nettyProperties;
 
 	/** 任务操作Dao */
 	@Resource
 	private TaskDao taskDao;
 
-	/** 事件总线 */
-	@Resource
-	private EventBus eventBus;
-
 	/** 通知组件 */
     @Resource
     private NoticeUtil noticeUtil;
-
-    /** 机子编号 */
-    @Value("${process.num}")
-	private int processNum;
-
-    /** 文件保存零时路径 */
-    @Value("${tempdir}")
-    private String tempDir;
 
 	/** 执行任务所需的参数 */
 	private Map<String, Object> taskParams = new HashMap<String, Object>();
@@ -207,12 +200,12 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
 				Task task = new Task();
 				task.setTaskId(String.valueOf(UUID.randomUUID()));
 				task.setReqUrl(ctx.channel().remoteAddress().toString());
-				task.setRevUrl(HostUtil.getIpv4Info().getLocalAddress());
+				task.setRevUrl(HostUtil.getHostInfo().getAddress());
 				task.setTaskParams(new Gson().toJson(taskParams));
 				task.setParamsMap(taskParams);
-				task.setComputeNum(processNum);
+				task.setComputeNum(0);
 				task.setTaskHandler(BussinessConstant.UPTOYUN);
-				task.setTaskStatus(ProcessEnum.PROCESSING.getNum());
+				task.setTaskStatus(BussinessConstant.UN_PROCESS);
 				task.setGmtCreate(new Timestamp(System.currentTimeMillis()));
 				task.setGmtHandle(new Timestamp(System.currentTimeMillis()));
 //				task.setHandleTimeEnum(TaskHandleTimeEnum.IMMEDIATELY);
@@ -233,21 +226,6 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
 				logger.info("文件 ：[{}] 反馈消息给客户端总共花费时间：{}ms", new Object[]{
 						taskParams.get(BussinessConstant.FILE_KEY),
 						(endResponseTime - beginTime)});
-
-				// 发送添加任务事件
-				long beginInQueneTime = System.currentTimeMillis();
-				// 发送添加任务事件
-				InQueneEvent inQueneEvent = new InQueneEvent(task);
-				eventBus.post(inQueneEvent);
-
-				// 接收文件请求结束
-				long endTime = System.currentTimeMillis();
-				logger.info("文件 ：[{}] 发送添加任务事件总共花费时间：{}ms", new Object[]{
-						taskParams.get(BussinessConstant.FILE_KEY),
-						( endTime - beginInQueneTime )});
-				logger.info("文件 ：[{}] 接收文件请求总共花费时间：{}ms", new Object[]{
-						taskParams.get(BussinessConstant.FILE_KEY),
-						( endTime - beginTime )});
 
                 return;
             }
@@ -306,7 +284,7 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
 				logger.info("文件 ：[{}] 接收开始：{}", fileUpload.getFilename(), beginTime);
 
 				StringBuffer fileNameBuf = new StringBuffer();
-				fileNameBuf.append(tempDir);
+				fileNameBuf.append(nettyProperties.getTempDir());
 
 				// 如果文件夹不存在
 				File dir = new File(fileNameBuf.toString());
@@ -344,7 +322,7 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
     private void writeResponse(ChannelHandlerContext ctx, HttpResponseStatus httpResponseStatus, String returnMsg) {
 
     	StringBuffer resultStr = new StringBuffer();
-    	resultStr.append(String.format(MsgConstant.SERVER_NODE_INFO, HostUtil.getIpv4Info().getLocalAddress()));
+    	resultStr.append(String.format(MsgConstant.SERVER_NODE_INFO, HostUtil.getHostInfo().getAddress()));
     	if(httpResponseStatus.code() == HttpResponseStatus.OK.code()) {
     		resultStr.append(String.format(MsgConstant.FILE_RECEIVE_SUCCESS, ctx.channel().remoteAddress().toString(),
 							taskParams.get(BussinessConstant.FILE_KEY)));
@@ -383,7 +361,7 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
 		String result = null;
 
 		// 取得源文件MD5
-		String md5Source = TaskUtil.getValue(taskParams, BussinessConstant.FILE_MD5);
+		String md5Source = taskParams.get(BussinessConstant.FILE_MD5).toString();
 		// 如果MD5不存在
 		if (Strings.isNullOrEmpty(md5Source)) {
 //			writeResponse(ctx, HttpResponseStatus.PRECONDITION_FAILED, "文件MD5参数不能为空！");
@@ -391,9 +369,9 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
 			return result;
 		}
 		// 取得文件的MD5
-		String filePath = TaskUtil.getValue(taskParams, FILE_PATH);
+		String filePath = taskParams.get(FILE_PATH).toString();
 		ByteSource byteSource = Files.asByteSource(new File(filePath));
-		String md5needCheck = MD5Util.md5(byteSource.openStream());
+		String md5needCheck = Hashing.md5().hashBytes(byteSource.read()).toString();
 		// 如果文件MD5不一致
 		if (!Objects.equal(md5Source, md5needCheck)) {
 //			writeResponse(ctx, HttpResponseStatus.PRECONDITION_FAILED, "文件完整性检查失败，两次MD5不一致！");

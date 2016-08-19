@@ -43,10 +43,13 @@ public interface MsgConstant {
     /** 回调异常异常报警标题 */
     String CALLBACK_EXCEPTION_NOTICE_TITLE = "上传组件回调功能发生异常";
 
-    /** 文件上传失败 */
-    String FILE_UPLOAD_FAILURE = "文件[%s]在服务器节点[%s]上%s，上传到云的信息[%s]，已重试3次还是失败，失败原因【%s】。";
+    /** 服务停止信息 */
+    String SERVER_STOP_INFO = "服务器节点[%s]上,[%s]服务停止";
 
-    /** 上传功能异常报警标题 */
-    String UPLOAD_EXCEPTION_NOTICE_TITLE = "上传组件上传功能发生异常";
+    /** 上传组件异常 */
+    String SERVER_EXCEPTION = "上传组件异常";
+
+    /** 服务异常信息 */
+    String SERVER_EXCEPTION_INFO = "服务器节点[%s]上,[%s]服务发生异常，cause：%s";
 
 }

@@ -1,34 +1,31 @@
-package com.ancun.up2yun.listener;
+package com.ancun.task.listener;
 
-import com.ancun.task.utils.MD5Util;
-import com.ancun.task.utils.StringUtil;
-import com.ancun.task.utils.TaskUtil;
-import com.ancun.thirdparty.aliyun.oss.AliyunOSS;
-import com.ancun.thirdparty.baiduyun.bos.BaiduyunBOS;
-import com.ancun.thirdparty.common.Response;
-import com.ancun.up2yun.event.Up2YunEvent;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-
 import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
 import com.google.common.math.LongMath;
+
+import com.ancun.task.event.Up2YunEvent;
+import com.ancun.task.utils.MD5Util;
+import com.ancun.task.utils.StringUtil;
+import com.ancun.task.utils.TaskUtil;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
-
 import java.io.File;
-import java.io.IOException;
 import java.math.RoundingMode;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Map;
+
+import javax.annotation.Resource;
 
 /**
  * 上传到云对象存储器事件监听

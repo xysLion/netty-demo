@@ -1,23 +1,23 @@
-package com.ancun.up2yun.task;
+package com.ancun.task.task;
 
 import com.google.common.eventbus.EventBus;
 import com.google.gson.Gson;
 
+import com.ancun.task.constant.BussinessConstant;
+import com.ancun.task.constant.Constant;
 import com.ancun.task.constant.ProcessEnum;
+import com.ancun.task.constant.StatusEnum;
 import com.ancun.task.constant.TaskHandleTimeEnum;
 import com.ancun.task.dao.TaskDao;
 import com.ancun.task.entity.Task;
-import com.ancun.task.task.HandleTask;
-import com.ancun.task.task.TaskBus;
+import com.ancun.task.event.Up2YunEvent;
+import com.ancun.task.listener.Up2YunListener;
 import com.ancun.task.utils.HostUtil;
 import com.ancun.task.utils.NoticeUtil;
 import com.ancun.task.utils.StringUtil;
 import com.ancun.task.utils.TaskUtil;
-import com.ancun.up2yun.constant.BussinessConstant;
-import com.ancun.up2yun.constant.MsgConstant;
-import com.ancun.up2yun.constant.StatusEnum;
-import com.ancun.up2yun.event.Up2YunEvent;
-import com.ancun.up2yun.listener.Up2YunListener;
+import com.ancun.task.utils.task.HandleTask;
+import com.ancun.task.utils.task.TaskBus;
 import com.ancun.utils.DESUtils;
 
 import org.apache.commons.io.FileUtils;
@@ -174,7 +174,7 @@ public class Up2YunTaskHandler {
                 // 上传失败
                 taskDao.fail(task);
 
-                String message = String.format(MsgConstant.FILE_UPLOAD_FAILURE,
+                String message = String.format(Constant.FILE_UPLOAD_FAILURE,
                         new Object[]{TaskUtil.getValue(taskParams,
                                 BussinessConstant.FILE_KEY),
                                 HostUtil.getIpv4Info().getLocalAddress(),
@@ -182,7 +182,7 @@ public class Up2YunTaskHandler {
                                 getYunInfo(taskParams),
                                 reason
                         });
-                noticeUtil.sendNotice(MsgConstant.UPLOAD_EXCEPTION_NOTICE_TITLE, message);
+                noticeUtil.sendNotice(Constant.UPLOAD_EXCEPTION_NOTICE_TITLE, message);
                 logger.info(message);
             } else {
 

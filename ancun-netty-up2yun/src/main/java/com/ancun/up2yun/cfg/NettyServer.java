@@ -1,14 +1,19 @@
 package com.ancun.up2yun.cfg;
 
 import com.ancun.netty.httpserver.HttpServer;
+import com.ancun.up2yun.cfg.NettyProperties;
 import com.ancun.up2yun.handlers.HttpUploadServerHandler;
-import org.springframework.beans.factory.annotation.Value;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
+
+import java.security.cert.CertificateException;
 
 import javax.annotation.Resource;
 import javax.net.ssl.SSLException;
-import java.security.cert.CertificateException;
 
 /**
  * 上传组件服务配置信息
@@ -19,27 +24,11 @@ import java.security.cert.CertificateException;
  * @Copyright:杭州安存网络科技有限公司 Copyright (c) 2015
  */
 @Configuration
-public class NettyServerConfig {
+@EnableConfigurationProperties({NettyProperties.class})
+public class NettyServer {
 
-//    @Value("${boss.thread.count}")
-//    private int bossCount;
-
-    /** netty io操作线程池大小 */
-    @Value("${worker.thread.count}")
-    private int workerCount;
-
-    /** netty服务器监听端口 */
-    @Value("${tcp.port}")
-    private int tcpPort;
-
-    @Value("${upload.file.size}")
-    private int maxContentSize;
-
-    @Value("${so.keepalive}")
-    private boolean keepAlive;
-
-    @Value("${so.backlog}")
-    private int backlog;
+    @Resource
+    NettyProperties properties;
 
     @Resource(name = "httpUploadServerHandler")
     private HttpUploadServerHandler handler;
@@ -48,10 +37,11 @@ public class NettyServerConfig {
     public HttpServer restExpress() throws CertificateException, SSLException {
 
         return HttpServer.builder()
-                .setName("UP2YUN-SERVER")
-                .setIoThreadCount(workerCount)
-                .setMaxContentSize(maxContentSize)
-                .setPort(tcpPort)
+                .setName(properties.getName())
+                .setIoThreadCount(properties.getWorkerThreads())
+                .setMaxContentSize((int)properties.getMaxContentSize())
+                .setPort(properties.getPort())
                 .addRequestHandler(handler);
     }
+
 }
