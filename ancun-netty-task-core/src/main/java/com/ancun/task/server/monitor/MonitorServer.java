@@ -1,18 +1,22 @@
 package com.ancun.task.server.monitor;
 
+import com.google.common.util.concurrent.AbstractScheduledService;
+import com.google.common.util.concurrent.MoreExecutors;
+
+import com.ancun.task.cfg.TaskProperties;
 import com.ancun.task.constant.Constant;
 import com.ancun.task.server.ServerManager;
 import com.ancun.task.utils.NoticeUtil;
-import com.google.common.util.concurrent.AbstractScheduledService;
-import com.google.common.util.concurrent.MoreExecutors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Resource;
 
 /**
  * 应用监控服务
@@ -23,17 +27,14 @@ import java.util.concurrent.TimeUnit;
  * @Copyright:杭州安存网络科技有限公司 Copyright (c) 2015
  */
 @Component
+@EnableConfigurationProperties({TaskProperties.class})
 public class MonitorServer {
 
     private static final Logger logger = LoggerFactory.getLogger(MonitorServer.class);
 
-    /** 延迟时间 */
-    @Value("${delay.time:0}")
-    private int delay;
-
-    /** 系统信息提示间隔时间(默认一天) */
-    @Value("${monitortask.period.time:86400000}")
-    private long monitorPeriod;
+    /** 任务相关配置 */
+    @Resource
+    private TaskProperties properties;
 
     /** 监控信息获取类 */
     @Resource
@@ -94,7 +95,11 @@ public class MonitorServer {
          */
         @Override
         protected Scheduler scheduler() {
-            return Scheduler.newFixedRateSchedule(delay, monitorPeriod, TimeUnit.MILLISECONDS);
+            return Scheduler.newFixedRateSchedule(
+                    properties.getDelayTime(),
+                    properties.getMonitorTime(),
+                    TimeUnit.MILLISECONDS
+            );
         }
     }
 

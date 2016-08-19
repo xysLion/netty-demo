@@ -3,6 +3,7 @@ package com.ancun.task.task;
 import com.google.common.eventbus.EventBus;
 import com.google.gson.Gson;
 
+import com.ancun.task.cfg.TaskProperties;
 import com.ancun.task.constant.BussinessConstant;
 import com.ancun.task.constant.Constant;
 import com.ancun.task.constant.ProcessEnum;
@@ -20,11 +21,10 @@ import com.ancun.task.utils.task.HandleTask;
 import com.ancun.task.utils.task.TaskBus;
 import com.ancun.utils.DESUtils;
 
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -43,6 +43,7 @@ import java.util.UUID;
  * @Copyright:杭州安存网络科技有限公司 Copyright (c) 2015
  */
 @Component
+@EnableConfigurationProperties({TaskProperties.class})
 public class Up2YunTaskHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(Up2YunTaskHandler.class);
@@ -60,12 +61,7 @@ public class Up2YunTaskHandler {
     private final NoticeUtil noticeUtil;
 
     /** 默认重试次数 */
-    @Value("${retry.times:3}")
-    private int defaultRetryTimes;
-
-    /** 机子唯一编码代号 */
-    @Value("${process.num}")
-    private int processNum;
+    private final int defaultRetryTimes;
 
     /**
      * 创建实例，并将自己注册到任务总线{@link TaskBus}
@@ -73,12 +69,13 @@ public class Up2YunTaskHandler {
      * @param taskBus 任务总线
      */
     @Autowired
-    public Up2YunTaskHandler(TaskBus taskBus, TaskDao taskDao, EventBus eventBus, Up2YunListener up2YunListener, NoticeUtil noticeUtil) {
+    public Up2YunTaskHandler(TaskBus taskBus, TaskDao taskDao, EventBus eventBus, Up2YunListener up2YunListener, NoticeUtil noticeUtil, TaskProperties properties) {
         taskBus.register(this);
         this.taskDao = taskDao;
         this.eventBus = eventBus;
         this.up2YunListener = up2YunListener;
         this.noticeUtil = noticeUtil;
+        this.defaultRetryTimes = properties.getRetryTimes();
     }
 
     /**
@@ -136,7 +133,7 @@ public class Up2YunTaskHandler {
                 taskDao.success(task);
                 // 删除临时文件
                 File file = new File(TaskUtil.getValue(taskParams, "file_path"));
-                FileUtils.deleteQuietly(file);
+                file.delete();
 
                 // 如果不需要回调，则直接提示成功
                 logger.info("文件[{0}]在服务器节点[{1}]上{2}！",
@@ -149,7 +146,7 @@ public class Up2YunTaskHandler {
                 retryFlg = true;
 //				reason = SpringContextUtil.getMessage("file.upload.retry.reason_2");
                 reason = up2YunListener.getExceptionMsg();
-                taskParams.put(up2YunListener.RETRY_UP_YUN_TYPE_KEY, up2YunListener.getRetryUpYunType());
+                taskParams.put(up2YunListener.RETRY_UP_YUN_TYPE, up2YunListener.getRetryUpYunType());
                 task.setTaskParams(new Gson().toJson(taskParams));
             }
 
@@ -215,7 +212,7 @@ public class Up2YunTaskHandler {
             taskParams.put("callbackCode", callbackCode);
             task.setTaskParams(new Gson().toJson(taskParams));
             task.setParamsMap(taskParams);
-            task.setComputeNum(processNum);
+            task.setComputeNum(0);
             task.setTaskHandler(BussinessConstant.CALLBACK);
             task.setTaskStatus(ProcessEnum.PROCESSING.getNum());
             task.setGmtCreate(new Timestamp(System.currentTimeMillis()));

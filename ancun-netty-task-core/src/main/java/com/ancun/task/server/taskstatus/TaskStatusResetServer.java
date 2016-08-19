@@ -1,18 +1,22 @@
 package com.ancun.task.server.taskstatus;
 
+import com.google.common.util.concurrent.AbstractScheduledService;
+import com.google.common.util.concurrent.MoreExecutors;
+
+import com.ancun.task.cfg.TaskProperties;
 import com.ancun.task.server.ServerManager;
 import com.ancun.task.service.ScanService;
 import com.ancun.task.strategy.Strategy;
-import com.google.common.util.concurrent.AbstractScheduledService;
-import com.google.common.util.concurrent.MoreExecutors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Resource;
 
 /**
  * 任务状态重置服务
@@ -23,17 +27,14 @@ import java.util.concurrent.TimeUnit;
  * @Copyright:杭州安存网络科技有限公司 Copyright (c) 2015
  */
 @Component
+@EnableConfigurationProperties({TaskProperties.class})
 public class TaskStatusResetServer {
 
     private static final Logger logger = LoggerFactory.getLogger(TaskStatusResetServer.class);
 
-    /** 延迟时间 */
-    @Value("${delay.time:0}")
-    private int delay;
-
-    /** 状态重置任务间隔时间(默认两天) */
-    @Value("${statustask.perion.seconds:172800000}")
-    private long statusPeriod;
+    /** 任务相关配置 */
+    @Resource
+    private TaskProperties properties;
 
     /** 是不是第一次扫描 */
     private static boolean firstScanFlg = true;
@@ -91,7 +92,7 @@ public class TaskStatusResetServer {
          */
         @Override
         protected Scheduler scheduler() {
-            return Scheduler.newFixedRateSchedule(delay, statusPeriod, TimeUnit.MILLISECONDS);
+            return Scheduler.newFixedRateSchedule(properties.getDelayTime(), properties.getStatusTime(), TimeUnit.MILLISECONDS);
         }
     }
 }

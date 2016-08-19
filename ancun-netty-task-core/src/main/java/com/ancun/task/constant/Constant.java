@@ -51,4 +51,25 @@ public class Constant {
 
     /** 服务异常信息 */
     public static final String SERVER_EXCEPTION_INFO = "服务器节点[%s]上,[%s]服务发生异常，cause：%s";
+
+    /** 文件上传失败 */
+    public static final String FILE_UPLOAD_FAILURE = "文件[%s]在服务器节点[%s]上%s，上传到云的信息[%s]，已重试3次还是失败，失败原因【%s】。";
+
+    /** 上传功能异常报警标题 */
+    public static final String UPLOAD_EXCEPTION_NOTICE_TITLE = "上传组件上传功能发生异常";
+
+    /** 回调异常情况1 */
+    public static final String SERVER_CALLBACK_RETRY_REASON_1 = "向服务器[%s]发送回调请求时出现异常，回调服务器基础信息[%s]，响应结果为%s。";
+
+    /** 回调异常情况2 */
+    public static final String SERVER_CALLBACK_RETRY_REASON_2 = "向服务器[%s]发送回调请求时出现异常，回调服务器基础信息[%s]。";
+
+    /** 回调成功 */
+    public static final String SERVER_CALLBACK_SUCCESS = "文件[%s]在服务器节点[%s]上处理结束，并且向服务器[%s]发送回调请求成功！";
+
+    /** 回调失败 */
+    public static final String SERVER_CALLBACK_FAILURE = "文件[%s]在服务器节点[%s]上回调服务器[%s]发送回调请求不成功，回调服务器基础信息[%s]，已重试3次还是失败，失败原因【%s】。";
+
+    /** 回调异常异常报警标题 */
+    public static final String CALLBACK_EXCEPTION_NOTICE_TITLE = "上传组件回调功能发生异常";
 }

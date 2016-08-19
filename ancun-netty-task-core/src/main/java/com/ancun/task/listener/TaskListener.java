@@ -5,7 +5,7 @@ import com.google.common.eventbus.Subscribe;
 
 import com.ancun.task.entity.Task;
 import com.ancun.task.event.InQueneEvent;
-import com.ancun.task.task.TaskBus;
+import com.ancun.task.utils.task.TaskBus;
 import com.ancun.task.utils.TaskUtil;
 
 import org.slf4j.Logger;

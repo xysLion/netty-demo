@@ -4,13 +4,14 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 
+import com.ancun.task.cfg.NoticeProperties;
 import com.ancun.task.domain.request.ReqBody;
 import com.ancun.task.domain.request.ReqCommon;
 import com.ancun.task.domain.request.ReqJson;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.util.Calendar;
@@ -28,6 +29,7 @@ import javax.annotation.Resource;
  * @Copyright:杭州安存网络科技有限公司 Copyright (c) 2015
  */
 @Component
+@EnableConfigurationProperties({NoticeProperties.class})
 public class NoticeUtil {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NoticeUtil.class);
@@ -44,25 +46,13 @@ public class NoticeUtil {
     /** 通知次数 */
     private static long noticeCount = 0;
 
+    /** 通知相关配置 */
+    @Resource
+    private NoticeProperties properties;
+
     /** rest请求组件 */
     @Resource
     private RestClient restClient;
-
-    /** 被通知人地址 */
-    @Value("${noticed.email.to}")
-    private String toAddress;
-
-    /** 发送通知服务地址 */
-    @Value("${notice.url}")
-    private String noticeUrl;
-
-    /** 一天最大允许短信通知数 */
-    @Value("${noticed.phone.allow.times}")
-    private long noticedPhoneAllowTimes;
-
-    /** 被通知人电话号码 */
-    @Value("${noticed.phone.number}")
-    private String noticedPhoneNumber;
 
     /** gson对象 */
     private final Gson gson = new Gson();
@@ -79,10 +69,10 @@ public class NoticeUtil {
         Map<String, String> content = baseContent(subject, message);
 
         // 发送短信通知
-        sendSMS(noticeUrl, content);
+        sendSMS(properties.getUrl(), content);
 
         // 发送邮件通知
-        sendEMAIL(noticeUrl, content);
+        sendEMAIL(properties.getUrl(), content);
     }
 
     /**
@@ -157,11 +147,11 @@ public class NoticeUtil {
 
         // 一天最大允许短信通知数
         //  如果未达到一天中允许的上限则允许短信通知
-        if (noticeCount < noticedPhoneAllowTimes && !Strings.isNullOrEmpty(noticedPhoneNumber)) {
+        if (noticeCount < properties.getMaxSendTimes() && !Strings.isNullOrEmpty(properties.getPhones())) {
 
             // 请求体内容
             Map<String, String> smsContent = basecontent;
-            smsContent.put("phoneNo", noticedPhoneNumber);
+            smsContent.put("phoneNo", properties.getPhones());
             ReqJson<Map<String, String>> reqJson = creatReqJson("sms", smsContent);
 
             // 发送短信通知
@@ -180,7 +170,7 @@ public class NoticeUtil {
 
         // 请求体内容
         Map<String, String> emailContent = basecontent;
-        emailContent.put("emailTo", toAddress);
+        emailContent.put("emailTo", properties.getEmails());
         ReqJson<Map<String, String>> reqJson = creatReqJson("email", emailContent);
 
         // 发送短信通知

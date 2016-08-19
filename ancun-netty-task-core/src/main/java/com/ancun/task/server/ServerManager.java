@@ -5,10 +5,11 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.Set;
@@ -22,7 +23,8 @@ import java.util.Set;
  * @Copyright:杭州安存网络科技有限公司 Copyright (c) 2015
  */
 @Component
-public class ServerManager implements ApplicationListener<ContextRefreshedEvent> {
+@Order(Integer.MAX_VALUE)
+public class ServerManager implements CommandLineRunner {
 
     private static final Logger logger = LoggerFactory.getLogger(ServerManager.class);
 
@@ -87,12 +89,13 @@ public class ServerManager implements ApplicationListener<ContextRefreshedEvent>
     }
 
     /**
-     * 当接收到ApplicationContext初始化或刷新完成后触发的事件时启动服务管理容器内的所有服务
+     * 当所有bean都实例化好时，启动任务
      *
-     * @param event ApplicationContext初始化或刷新完成后触发的事件
+     * @param strings   相关参数
+     * @throws Exception    异常
      */
     @Override
-    public void onApplicationEvent(ContextRefreshedEvent event) {
+    public void run(String... strings) throws Exception {
         this.startAllServer();
     }
 

@@ -1,25 +1,17 @@
 package com.ancun.task.cfg;
 
-import com.google.common.collect.Lists;
 import com.google.common.eventbus.DeadEvent;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
 import com.ancun.task.listener.TaskListener;
-import com.ancun.task.task.TaskBus;
+import com.ancun.task.utils.task.TaskBus;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
-import org.springframework.context.support.ReloadableResourceBundleMessageSource;
-
-import java.util.List;
 
 import javax.annotation.Resource;
 
@@ -32,20 +24,14 @@ import javax.annotation.Resource;
  * @Copyright:杭州安存网络科技有限公司 Copyright (c) 2015
  */
 @Configuration
-@ComponentScan("com.ancun.task")
-@PropertySource({"file:${up2yun.home}/config/task.properties"})
-@Import({DataSourceConfig.class})
+@EnableConfigurationProperties({TaskProperties.class})
 public class TaskCoreConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(TaskCoreConfig.class);
 
-    /** 业务调度线程池大小 */
-    @Value("${business.thread.count}")
-    private int businessCount;
-
-    /** 任务执行间隔时间 */
-    @Value("${duration}")
-    private long duration;
+    /** 任务相关配置 */
+    @Resource
+    private TaskProperties properties;
 
     /**
      * 注入guava事件总线
@@ -77,7 +63,7 @@ public class TaskCoreConfig {
      */
     @Bean
     public TaskBus taskBus(){
-        return new TaskBus(businessCount);
+        return new TaskBus(properties.getWorkerThreads());
     }
 
     /**
@@ -87,44 +73,7 @@ public class TaskCoreConfig {
      */
     @Bean
     public TaskListener taskListener() {
-        return new TaskListener(eventBus(), taskBus(), duration);
+        return new TaskListener(eventBus(), taskBus(), properties.getDuration());
     }
 
-    /** 默认消息文件数组 */
-    @Bean(name = "messageFiles")
-    public List<String> messageFiles(){
-        return Lists.newArrayList();
-    }
-
-    /** 消息文件列表 */
-    @Resource(name = "messageFiles")
-    private List<String> messageFiles;
-
-    /**
-     * 注入消息处理器
-     *
-     * @return 消息处理器
-     */
-    @Bean(name = "messageSource")
-    public ReloadableResourceBundleMessageSource getMessageSource() {
-        ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
-
-        messageFiles.add("message/task_messages");
-
-        messageSource.setBasenames(messageFiles.toArray(new String[messageFiles.size()]));
-        messageSource.setDefaultEncoding("UTF-8");
-        messageSource.setUseCodeAsDefaultMessage(true);
-        messageSource.setCacheSeconds(5);
-        return messageSource;
-    }
-
-    /**
-     * Necessary to make the Value annotations work.
-     *
-     * @return
-     */
-    @Bean
-    public static PropertySourcesPlaceholderConfigurer propertyPlaceholderConfigurer() {
-        return new PropertySourcesPlaceholderConfigurer();
-    }
 }

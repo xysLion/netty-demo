@@ -1,4 +1,4 @@
-package com.ancun.task.task;
+package com.ancun.task.utils.task;
 
 import com.google.common.base.Preconditions;
 import javax.annotation.Nullable;

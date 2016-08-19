@@ -1,23 +1,27 @@
 package com.ancun.task.server.scan;
 
+import com.google.common.eventbus.EventBus;
+import com.google.common.util.concurrent.AbstractScheduledService;
+import com.google.common.util.concurrent.MoreExecutors;
+
+import com.ancun.task.cfg.TaskProperties;
 import com.ancun.task.entity.Task;
 import com.ancun.task.event.InQueneEvent;
 import com.ancun.task.server.ServerManager;
 import com.ancun.task.service.ScanService;
 import com.ancun.task.strategy.Strategy;
-import com.google.common.eventbus.EventBus;
-import com.google.common.util.concurrent.AbstractScheduledService;
-import com.google.common.util.concurrent.MoreExecutors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Resource;
 
 /**
  * 扫描任务表，并将需要执行的任务添加到执行队列
@@ -28,17 +32,14 @@ import java.util.concurrent.TimeUnit;
  * @Copyright:杭州安存网络科技有限公司 Copyright (c) 2015
  */
 @Component
+@EnableConfigurationProperties({TaskProperties.class})
 public class ScanServer {
 
     private static final Logger logger = LoggerFactory.getLogger(ScanServer.class);
 
-    /** 延迟时间 */
-    @Value("${delay.time:0}")
-    private int delay;
-
-    /** 间隔时间(默认1秒) */
-    @Value("${period.time:1000}")
-    private int period;
+    /** 任务相关配置 */
+    @Resource
+    private TaskProperties properties;
 
     /** 扫描service */
     @Resource
@@ -98,9 +99,6 @@ public class ScanServer {
                 List<Task> tasks = scanService.scanTask(strategy.getStrategy(), taskHandler);
                 logger.debug("已扫描到{}需要执行任务,即将执行扫描到的任务", tasks.size());
 
-                // 配置文件中设置的任务执行间隔时间
-//          long duration = Integer.valueOf(SpringContextUtil.getProperty(Constant.DURATION));
-
                 // 循环执行任务
                 for (Task task : tasks) {
 
@@ -128,7 +126,11 @@ public class ScanServer {
          */
         @Override
         protected Scheduler scheduler() {
-            return Scheduler.newFixedRateSchedule(delay, period, TimeUnit.MILLISECONDS);
+            return Scheduler.newFixedRateSchedule(
+                    properties.getDelayTime(),
+                    properties.getScanTime(),
+                    TimeUnit.MILLISECONDS
+            );
         }
     }
 }

@@ -3,28 +3,28 @@ package com.ancun.task.task;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import com.ancun.task.cfg.TaskProperties;
+import com.ancun.task.constant.BussinessConstant;
+import com.ancun.task.constant.Constant;
 import com.ancun.task.dao.TaskDao;
 import com.ancun.task.domain.request.ReqBody;
 import com.ancun.task.domain.request.ReqCommon;
 import com.ancun.task.domain.response.RespJson;
 import com.ancun.task.entity.Task;
-import com.ancun.task.task.HandleTask;
-import com.ancun.task.task.TaskBus;
 import com.ancun.task.utils.HmacSha1Util;
 import com.ancun.task.utils.HostUtil;
 import com.ancun.task.utils.MD5Util;
 import com.ancun.task.utils.NoticeUtil;
 import com.ancun.task.utils.RestClient;
 import com.ancun.task.utils.TaskUtil;
-import com.ancun.up2yun.constant.BussinessConstant;
-import com.ancun.up2yun.constant.MsgConstant;
-import com.ancun.up2yun.constant.ResponseConst;
+import com.ancun.task.utils.task.HandleTask;
+import com.ancun.task.utils.task.TaskBus;
 import com.ancun.utils.DESUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Type;
@@ -41,6 +41,7 @@ import java.util.Map;
  * @Copyright:杭州安存网络科技有限公司 Copyright (c) 2015
  */
 @Component
+@EnableConfigurationProperties({TaskProperties.class})
 public class CallbackHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(CallbackHandler.class);
@@ -63,15 +64,15 @@ public class CallbackHandler {
     private final NoticeUtil noticeUtil;
 
     /** 默认重试次数 */
-    @Value("${retry.times:3}")
-    private int defaultRetryTimes;
+    private final int defaultRetryTimes;
 
     @Autowired
-    public CallbackHandler(TaskBus taskBus, TaskDao taskDao, RestClient restClient, NoticeUtil noticeUtil) {
+    public CallbackHandler(TaskBus taskBus, TaskDao taskDao, RestClient restClient, NoticeUtil noticeUtil, TaskProperties properties) {
         taskBus.register(this);
         this.taskDao = taskDao;
         this.restClient = restClient;
         this.noticeUtil = noticeUtil;
+        this.defaultRetryTimes = properties.getRetryTimes();
     }
 
     /**
@@ -112,19 +113,19 @@ public class CallbackHandler {
             RespJson<String> respJson = gson.fromJson(response, respJsonType);
 //			int statusCode = response.getStatusLine().getStatusCode();
             int statusCode = respJson.getResponse().getInfo().getCode();
-            if(statusCode != ResponseConst.SUCCESS){
+            if(statusCode != BussinessConstant.SUCCESS){
                 retryFlg = true;
-                reason = String.format(MsgConstant.SERVER_CALLBACK_RETRY_REASON_1, uri, getCallbackServerInfo(taskParams), response );
+                reason = String.format(Constant.SERVER_CALLBACK_RETRY_REASON_1, uri, getCallbackServerInfo(taskParams), response );
             } else {
                 // 回调成功
                 taskDao.success(task);
-                logger.info(String.format(MsgConstant.SERVER_CALLBACK_SUCCESS,
+                logger.info(String.format(Constant.SERVER_CALLBACK_SUCCESS,
                         new Object[]{TaskUtil.getValue(taskParams, BussinessConstant.FILE_KEY),
                                 HostUtil.getIpv4Info().getLocalAddress(), uri}));
             }
 
         } catch (Exception e) {
-            String msg = String.format(MsgConstant.SERVER_CALLBACK_RETRY_REASON_2,
+            String msg = String.format(Constant.SERVER_CALLBACK_RETRY_REASON_2,
                     new Object[]{ uri, getCallbackServerInfo(taskParams)});
             logger.info(msg, e);
             retryFlg = true;
@@ -142,7 +143,7 @@ public class CallbackHandler {
                 // 失败
                 taskDao.fail(task);
 
-               String message = String.format(MsgConstant.SERVER_CALLBACK_FAILURE,
+               String message = String.format(Constant.SERVER_CALLBACK_FAILURE,
                         new Object[]{TaskUtil.getValue(taskParams, BussinessConstant.FILE_KEY),
                                 HostUtil.getIpv4Info().getLocalAddress(),
                                 uri,
@@ -153,7 +154,7 @@ public class CallbackHandler {
                 logger.info(message);
 
                 // 发送通知
-                noticeUtil.sendNotice(MsgConstant.CALLBACK_EXCEPTION_NOTICE_TITLE, message);
+                noticeUtil.sendNotice(Constant.CALLBACK_EXCEPTION_NOTICE_TITLE, message);
 
             } else {
 

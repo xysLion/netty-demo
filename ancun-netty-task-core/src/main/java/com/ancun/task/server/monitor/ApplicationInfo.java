@@ -4,7 +4,7 @@ import com.ancun.task.constant.Constant;
 import com.ancun.task.entity.TaskStatusInfo;
 import com.ancun.task.server.ServerManager;
 import com.ancun.task.service.ScanService;
-import com.ancun.task.task.TaskBus;
+import com.ancun.task.utils.task.TaskBus;
 import com.google.common.base.Joiner;
 import org.springframework.stereotype.Component;
 
