@@ -1,6 +1,10 @@
 package com.ancun.task.cfg;
 
+import com.google.common.base.Strings;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import java.io.File;
 
 /**
  * 任务相关配置
@@ -36,6 +40,9 @@ public class TaskProperties {
 
     /** 允许任务处于处理中的最长时间(单位：秒，两天) */
     private long statusTime = 172800000;
+
+    /** 文件保存临时目录 */
+    private String tempDir = "";
 
     public int getWorkerThreads() {
         return workerThreads;
@@ -99,5 +106,19 @@ public class TaskProperties {
 
     public void setStatusTime(long statusTime) {
         this.statusTime = statusTime;
+    }
+
+    public String getTempDir() {
+        return tempDir;
+    }
+
+    public void setTempDir(String tempDir) {
+        this.tempDir = tempDir;
+        if (!Strings.isNullOrEmpty(tempDir)) {
+            File file = new File(tempDir);
+            if (!file.exists()) {
+                file.mkdirs();
+            }
+        }
     }
 }

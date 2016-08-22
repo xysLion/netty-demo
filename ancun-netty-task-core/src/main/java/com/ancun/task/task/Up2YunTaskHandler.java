@@ -26,13 +26,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
-import java.io.File;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
+
+import static com.ancun.task.constant.BussinessConstant.FILE_URL;
 
 /**
  * 将文件上传到云上任务包裹类
@@ -63,19 +65,25 @@ public class Up2YunTaskHandler {
     /** 默认重试次数 */
     private final int defaultRetryTimes;
 
+    /** rest请求 */
+    private final RestTemplate restTemplate;
+
     /**
      * 创建实例，并将自己注册到任务总线{@link TaskBus}
      *
      * @param taskBus 任务总线
      */
     @Autowired
-    public Up2YunTaskHandler(TaskBus taskBus, TaskDao taskDao, EventBus eventBus, Up2YunListener up2YunListener, NoticeUtil noticeUtil, TaskProperties properties) {
+    public Up2YunTaskHandler(
+            TaskBus taskBus, TaskDao taskDao, EventBus eventBus, RestTemplate restTemplate,
+            Up2YunListener up2YunListener, NoticeUtil noticeUtil, TaskProperties properties) {
         taskBus.register(this);
         this.taskDao = taskDao;
         this.eventBus = eventBus;
         this.up2YunListener = up2YunListener;
         this.noticeUtil = noticeUtil;
         this.defaultRetryTimes = properties.getRetryTimes();
+        this.restTemplate = restTemplate;
     }
 
     /**
@@ -131,12 +139,12 @@ public class Up2YunTaskHandler {
 
                 // 上传成功，回调成功，删除记录
                 taskDao.success(task);
-                // 删除临时文件
-                File file = new File(TaskUtil.getValue(taskParams, "file_path"));
-                file.delete();
+
+                // 删除文件
+                restTemplate.delete(TaskUtil.getValue(taskParams, FILE_URL));
 
                 // 如果不需要回调，则直接提示成功
-                logger.info("文件[{0}]在服务器节点[{1}]上{2}！",
+                logger.info("文件[{}]在服务器节点[{}]上{}！",
                         new Object[]{TaskUtil.getValue(taskParams,
                                 BussinessConstant.FILE_KEY),
                                 HostUtil.getIpv4Info().getLocalAddress(), callbackResult});

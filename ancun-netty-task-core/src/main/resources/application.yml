@@ -36,6 +36,8 @@ task:
   scanTime: 1000
   # 允许任务处于处理中的最长时间(单位：秒，两天)
   statusTime: 172800000
+  # 临时目录
+  tempDir: E:\temp\task\
 
 #被通知人相关信息
 notice:

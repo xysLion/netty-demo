@@ -13,9 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.annotation.Resource;
@@ -52,7 +52,7 @@ public class NoticeUtil {
 
     /** rest请求组件 */
     @Resource
-    private RestClient restClient;
+    private RestTemplate restTemplate;
 
     /** gson对象 */
     private final Gson gson = new Gson();
@@ -85,8 +85,12 @@ public class NoticeUtil {
     private Map<String, String> baseContent(String subject, String message) {
         Map<String, String> content = Maps.newHashMap();
 
+        String localIp = HostUtil.getHostInfo().getAddress();
+
+        String msg = "服务器IP[" + localIp + "]：<br/>" + message;
+
         content.put("subject", subject);
-        content.put("message", message);
+        content.put("message", msg);
         content.put("asyn", "true");
 
         return content;
@@ -155,7 +159,7 @@ public class NoticeUtil {
             ReqJson<Map<String, String>> reqJson = creatReqJson("sms", smsContent);
 
             // 发送短信通知
-            restClient.post(url, gson.toJson(reqJson), new HashMap<String, Object>());
+            restTemplate.postForObject(url, reqJson, String.class);
         }
 
     }
@@ -174,7 +178,7 @@ public class NoticeUtil {
         ReqJson<Map<String, String>> reqJson = creatReqJson("email", emailContent);
 
         // 发送短信通知
-        restClient.post(url, gson.toJson(reqJson), new HashMap<String, Object>());
+        restTemplate.postForObject(url, reqJson, String.class);
 
     }
 }

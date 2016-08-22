@@ -29,7 +29,7 @@ netty:
   # 上传文件的的大小(100M)
   maxContentSize: 104857600
   # 上传文件保存用临时文件夹
-  tempDir: E://temp//up2yun//
+  tempDir: E:/temp/up2yun/
 
 #被通知人相关信息
 notice:

@@ -2,7 +2,6 @@ package com.ancun.up2yun.utils;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
-import com.google.gson.Gson;
 
 import com.ancun.netty.httpclient.HttpClient;
 import com.ancun.up2yun.cfg.NoticeProperties;
@@ -21,6 +20,8 @@ import java.util.Map;
 import javax.annotation.Resource;
 
 import io.netty.util.CharsetUtil;
+
+import static com.ancun.up2yun.constant.BussinessConstant.GSON;
 
 /**
  * 发送通知工具类。
@@ -47,9 +48,6 @@ public class NoticeUtil {
 
     /** 通知次数 */
     private static long noticeCount = 0;
-
-    /** gson对象 */
-    private final Gson gson = new Gson();
 
     /** 通知相关配置 */
     @Resource
@@ -83,8 +81,12 @@ public class NoticeUtil {
     private Map<String, String> baseContent(String subject, String message) {
         Map<String, String> content = Maps.newHashMap();
 
+        String localIp = HostUtil.getHostInfo().getAddress();
+
+        String msg = "服务器IP[" + localIp + "]：<br/>" + message;
+
         content.put("subject", subject);
-        content.put("message", message);
+        content.put("message", msg);
         content.put("asyn", "true");
 
         return content;
@@ -153,7 +155,7 @@ public class NoticeUtil {
             ReqJson<Map<String, String>> reqJson = creatReqJson("sms", smsContent);
 
             // 发送短信通知
-            HttpClient.post(url, gson.toJson(reqJson).getBytes(), CharsetUtil.UTF_8);
+            HttpClient.post(url, GSON.toJson(reqJson).getBytes(), CharsetUtil.UTF_8);
         }
 
     }
@@ -172,7 +174,7 @@ public class NoticeUtil {
         ReqJson<Map<String, String>> reqJson = creatReqJson("email", emailContent);
 
         // 发送短信通知
-        HttpClient.post(url, gson.toJson(reqJson).getBytes(), CharsetUtil.UTF_8);
+        HttpClient.post(url, GSON.toJson(reqJson).getBytes(), CharsetUtil.UTF_8);
 
     }
 }

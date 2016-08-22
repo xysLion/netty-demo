@@ -15,7 +15,6 @@ import com.ancun.task.utils.HmacSha1Util;
 import com.ancun.task.utils.HostUtil;
 import com.ancun.task.utils.MD5Util;
 import com.ancun.task.utils.NoticeUtil;
-import com.ancun.task.utils.RestClient;
 import com.ancun.task.utils.TaskUtil;
 import com.ancun.task.utils.task.HandleTask;
 import com.ancun.task.utils.task.TaskBus;
@@ -25,7 +24,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
 import java.lang.reflect.Type;
 import java.net.URLEncoder;
@@ -58,7 +63,7 @@ public class CallbackHandler {
     private final TaskDao taskDao;
 
     /** http请求组件 */
-    private final RestClient restClient;
+    private final RestTemplate restTemplate;
 
     /** 通知组件 */
     private final NoticeUtil noticeUtil;
@@ -67,10 +72,10 @@ public class CallbackHandler {
     private final int defaultRetryTimes;
 
     @Autowired
-    public CallbackHandler(TaskBus taskBus, TaskDao taskDao, RestClient restClient, NoticeUtil noticeUtil, TaskProperties properties) {
+    public CallbackHandler(TaskBus taskBus, TaskDao taskDao, RestTemplate restTemplate, NoticeUtil noticeUtil, TaskProperties properties) {
         taskBus.register(this);
         this.taskDao = taskDao;
-        this.restClient = restClient;
+        this.restTemplate = restTemplate;
         this.noticeUtil = noticeUtil;
         this.defaultRetryTimes = properties.getRetryTimes();
     }
@@ -195,9 +200,11 @@ public class CallbackHandler {
         common.setAction(requestUri.substring(requestUri.lastIndexOf("/") + 1));
         obj.setCommon(common);
 
+        HttpHeaders headers = new HttpHeaders();
+
         String requestJson = "";
 
-        header.put("format", "json");
+        headers.set("format", "json");
         requestJson = gson.toJson(obj);
         requestJson = "{\"request\":"+requestJson+"}";
         logger.info("回调服务器地址信息：" + requestUri);
@@ -205,15 +212,22 @@ public class CallbackHandler {
             if (accessKey != null && !"".equals(accessKey.toString())) {
                 String sign = HmacSha1Util.signToString(MD5Util.md5(requestJson).toLowerCase(),
                         accessKey.toString(), CHARSETNAME_DEFAULT);
-                header.put("sign", URLEncoder.encode(sign, CHARSETNAME_DEFAULT));
+                headers.set("sign", URLEncoder.encode(sign, CHARSETNAME_DEFAULT));
             }
-            header.put("reqlength", requestJson.length());
+            headers.set("reqlength", requestJson.length() + "");
         }catch(Exception e){
             throw new RuntimeException(e);
         }
 
         // post发送json
-        return restClient.post(requestUri, requestJson, header);
+        HttpEntity<String> entity = new HttpEntity<String>(requestJson, headers);
+        ResponseEntity<String> result = restTemplate.exchange(requestUri, HttpMethod.POST, entity, String.class);
+
+        if (result.getStatusCode() == HttpStatus.OK) {
+            return result.getBody();
+        } else {
+            throw new RuntimeException("回调出现异常");
+        }
     }
 
     /**

@@ -8,6 +8,7 @@ import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
 import com.google.common.math.LongMath;
 
+import com.ancun.task.cfg.TaskProperties;
 import com.ancun.task.event.Up2YunEvent;
 import com.ancun.task.utils.MD5Util;
 import com.ancun.task.utils.StringUtil;
@@ -18,19 +19,29 @@ import com.ancun.thirdparty.common.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
+import java.io.IOException;
 import java.math.RoundingMode;
 import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import javax.annotation.Resource;
+import java.util.UUID;
 
 import static com.ancun.task.constant.BussinessConstant.FILE_KEY;
 import static com.ancun.task.constant.BussinessConstant.FILE_MD5;
+import static com.ancun.task.constant.BussinessConstant.FILE_URL;
 import static com.ancun.task.constant.BussinessConstant.YUN_TYPE;
 
 /**
@@ -42,7 +53,8 @@ import static com.ancun.task.constant.BussinessConstant.YUN_TYPE;
  * @Copyright:杭州安存网络科技有限公司 Copyright (c) 2015
  */
 @Component
-public class Up2YunListener implements InitializingBean {
+@EnableConfigurationProperties({TaskProperties.class})
+public class Up2YunListener {
 
     private static final Logger logger = LoggerFactory.getLogger(Up2YunListener.class);
 
@@ -76,6 +88,9 @@ public class Up2YunListener implements InitializingBean {
     /** 换行符 */
     private static final String NEW_LINE = "\n";
 
+    /** 文件保存临时目录 */
+    private final String tempDir;
+
     /** 上传结果 */
     private List<Boolean> result = Lists.newArrayList();
 
@@ -85,8 +100,15 @@ public class Up2YunListener implements InitializingBean {
     /** 重试上传云参数 */
     private String retryUpYunType = "";
 
-    @Resource
-    private EventBus eventBus;
+    /** rest请求 */
+    private final RestTemplate restTemplate;
+
+    @Autowired
+    public Up2YunListener(EventBus bus, TaskProperties properties, RestTemplate restTemplate) {
+        bus.register(this);
+        this.tempDir = properties.getTempDir();
+        this.restTemplate = restTemplate;
+    }
 
     /**
      * 上传到OSS
@@ -129,10 +151,16 @@ public class Up2YunListener implements InitializingBean {
                 // 新建阿里云实例
                 AliyunOSS oss = new AliyunOSS(accessId, accessKey);
 
+                // 取得文件
+                File file = getFile(TaskUtil.getValue(taskParams, FILE_URL));
+
                 // 上传到阿里云
                 @SuppressWarnings("unchecked")
-				Response responseResult = oss.putObject(bucket, TaskUtil.getValue(taskParams, FILE_KEY),
-                        TaskUtil.getValue(taskParams, FILE_PATH), (Map<String, String>)taskParams.get(USER_META_INFO));
+				Response responseResult = oss.putObject(bucket,
+                        TaskUtil.getValue(taskParams, FILE_KEY),
+                        file,
+                        file.length(),
+                        (Map<String, String>)taskParams.get(USER_META_INFO));
 
                 // 如果成功则返回上传到阿里云后云上生成的MD5
                 String getedMd5 = Strings.nullToEmpty(responseResult.getEtag());
@@ -142,6 +170,11 @@ public class Up2YunListener implements InitializingBean {
                 // 如果MD5验证不同过
                 if (!resultFlg) {
                     exceptionMsg += "上传阿里云后得到的MD5与产品平台提供的MD5不一致";
+                }
+
+                // 删除文件
+                if (file.exists()) {
+                    file.delete();
                 }
 
                 // 上传到云结束时间
@@ -205,7 +238,7 @@ public class Up2YunListener implements InitializingBean {
                 // 新建百度云BOSclient实例
                 BaiduyunBOS oss = new BaiduyunBOS(accessId, accessKey);
 
-                File file = new File(TaskUtil.getValue(taskParams, FILE_PATH));
+                File file = getFile(TaskUtil.getValue(taskParams, FILE_URL));
 
                 // 开始上传时间
                 long beginTime = System.currentTimeMillis();
@@ -224,6 +257,11 @@ public class Up2YunListener implements InitializingBean {
                 // 如果MD5验证不同过
                 if (!resultFlg) {
                     exceptionMsg += "上传百度云后得到的MD5与产品平台提供的MD5不一致";
+                }
+
+                // 删除文件
+                if (file.exists()) {
+                    file.delete();
                 }
 
                 // 上传到云结束时间
@@ -314,6 +352,39 @@ public class Up2YunListener implements InitializingBean {
     }
 
     /**
+     * 取得文件
+     *
+     * @param fileUrl   文件网络路径
+     * @return  文件
+     */
+    private File getFile(String fileUrl){
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM));
+
+        HttpEntity<String> entity = new HttpEntity<String>(headers);
+
+        ResponseEntity<byte[]> response = restTemplate.exchange(
+                fileUrl, HttpMethod.GET, entity, byte[].class);
+
+        // 取得文件
+        File file = new File(tempDir + UUID.randomUUID().toString());
+
+        if (response.getStatusCode() == HttpStatus.OK) {
+
+            try {
+                Files.write(response.getBody(), file);
+            } catch (IOException e) {
+                logger.error("文件写入异常", e);
+            }
+
+        }
+
+        return file;
+
+    }
+
+    /**
      * 计算接收文件的MD5值
      *
      * @param taskParams    参数
@@ -348,10 +419,5 @@ public class Up2YunListener implements InitializingBean {
         }
 
         return md5;
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        eventBus.register(this);
     }
 }

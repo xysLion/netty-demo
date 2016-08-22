@@ -1,5 +1,7 @@
 package com.ancun.up2yun.constant;
 
+import com.google.gson.Gson;
+
 /**
  * 业务常量类
  *
@@ -18,6 +20,9 @@ public class BussinessConstant {
 
     /** 文件路径标记 */
     public static final String FILE_NAME = "file_name";
+
+    /** 文件网络路径标记 */
+    public static final String FILE_URL = "file_url";
 
     /** 本上传组件标识 */
     public static final String PROCESS_NUM = "process.num";
@@ -42,5 +47,8 @@ public class BussinessConstant {
 
     /** 任务为处理 */
     public static final int UN_PROCESS = 0;
+
+    /** gson工具类 */
+    public static final Gson GSON = new Gson();
 
 }

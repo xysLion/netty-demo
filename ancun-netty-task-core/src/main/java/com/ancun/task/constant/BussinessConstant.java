@@ -10,23 +10,14 @@ package com.ancun.task.constant;
  */
 public class BussinessConstant {
 
-    /** 用户meta信息前缀 */
-    public static final String USER_META_INFO_PREFIX = "x-oss-meta-";
-
     /** 上传OSS时显示文件名 */
     public static final String FILE_KEY = "fileKey";
 
-    /** 文件路径标记 */
-    public static final String FILE_NAME = "file_name";
-
-    /** 本上传组件标识 */
-    public static final String PROCESS_NUM = "process.num";
+    /** 文件网路路径 */
+    public static final String FILE_URL = "file_url";
 
     /**  回调参数名 */
     public static final String CALLBACK_URI = "callbackUri";
-
-    /**  重试次数 */
-    public static final String RETRY_TIMES = "retry.times";
 
     /**  文件md5参数名 */
     public static final String FILE_MD5 = "fileMd5";
