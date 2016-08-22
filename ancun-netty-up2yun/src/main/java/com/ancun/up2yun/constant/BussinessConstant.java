@@ -24,26 +24,11 @@ public class BussinessConstant {
     /** 文件网络路径标记 */
     public static final String FILE_URL = "file_url";
 
-    /** 本上传组件标识 */
-    public static final String PROCESS_NUM = "process.num";
-
-    /**  回调参数名 */
-    public static final String CALLBACK_URI = "callbackUri";
-
-    /**  重试次数 */
-    public static final String RETRY_TIMES = "retry.times";
-
     /**  文件md5参数名 */
     public static final String FILE_MD5 = "fileMd5";
 
-    /**  时间格式 */
-    public static final String DEFAULT_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
-
     /** 将文件上传到云 */
     public static final int UPTOYUN = 0;
-
-    /** 将上传结果通知回调方 */
-    public static final int CALLBACK = 1;
 
     /** 任务为处理 */
     public static final int UN_PROCESS = 0;

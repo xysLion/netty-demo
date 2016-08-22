@@ -25,12 +25,6 @@ public interface MsgConstant {
     /** 文件接收成功信息 */
     String FILE_RECEIVE_SUCCESS = "已从节点[%s]接收到文件[%s],准备上传到云对象存储。";
 
-    /** 已用硬盘空间 */
-    String USED_DISK_INFO = "服务器节点[%s]已用掉硬盘空间：%s MB";
-
-    /** 服务停止信息 */
-    String SERVER_STOP_INFO = "服务器节点[%s]上,[%s]服务停止";
-
     /** 上传组件异常 */
     String SERVER_EXCEPTION = "上传组件异常";
 
