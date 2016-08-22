@@ -9,6 +9,12 @@ info:
 logging:
   path: E://logs//up2yun
 
+# 不开启jmx端口进行监控
+endpoints:
+  jmx:
+    enabled: false
+
+# spring 相关配置
 spring:
   #数据库相关配置
   datasource:

@@ -9,8 +9,14 @@ info:
 logging:
   path: E://logs//task
 
+# 不开启jmx端口进行监控
+endpoints:
+  jmx:
+    enabled: false
+
+# spring相关配置
 spring:
-  #数据库相关配置
+  # 数据库相关配置
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: com.mysql.jdbc.Driver

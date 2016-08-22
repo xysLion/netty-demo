@@ -15,7 +15,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class TaskApp {
 
     public static void main(String[] args) {
-        SpringApplication.run(TaskApp.class, args);
+        SpringApplication app = new SpringApplication(TaskApp.class);
+        app.setWebEnvironment(false);
+        app.run(args);
     }
 
 }
