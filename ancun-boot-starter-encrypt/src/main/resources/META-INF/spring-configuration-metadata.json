@@ -1,0 +1,88 @@
+{
+  "groups": [
+    {
+      "name": "encrypt",
+      "type": "com.ancun.boot.encrypt.KeyProperties",
+      "sourceType": "com.ancun.boot.encrypt.KeyProperties"
+    },
+    {
+      "name": "encrypt.key-store",
+      "type": "com.ancun.boot.encrypt.KeyProperties$KeyStore",
+      "sourceType": "com.ancun.boot.encrypt.KeyProperties",
+      "sourceMethod": "getKeyStore()"
+    },
+    {
+      "name": "encrypt.rsa",
+      "type": "com.ancun.boot.encrypt.KeyProperties$Rsa",
+      "sourceType": "com.ancun.boot.encrypt.KeyProperties",
+      "sourceMethod": "getRsa()"
+    }
+  ],
+  "properties": [
+    {
+      "name": "encrypt.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable decryption of environment properties before sending to client.",
+      "sourceType": "com.ancun.boot.encrypt.KeyProperties",
+      "defaultValue": true
+    },
+    {
+      "name": "encrypt.fail-on-error",
+      "type": "java.lang.Boolean",
+      "description": "Flag to say that a process should fail if there is an encryption or decryption\n error.",
+      "sourceType": "com.ancun.boot.encrypt.KeyProperties",
+      "defaultValue": true
+    },
+    {
+      "name": "encrypt.key",
+      "type": "java.lang.String",
+      "description": "A symmetric key. As a stronger alternative consider using a keystore.",
+      "sourceType": "com.ancun.boot.encrypt.KeyProperties"
+    },
+    {
+      "name": "encrypt.key-store.alias",
+      "type": "java.lang.String",
+      "description": "Alias for a key in the store.",
+      "sourceType": "com.ancun.boot.encrypt.KeyProperties$KeyStore"
+    },
+    {
+      "name": "encrypt.key-store.location",
+      "type": "org.springframework.core.io.Resource",
+      "description": "Location of the key store file, e.g. classpath:/keystore.jks.",
+      "sourceType": "com.ancun.boot.encrypt.KeyProperties$KeyStore"
+    },
+    {
+      "name": "encrypt.key-store.password",
+      "type": "java.lang.String",
+      "description": "Password that locks the keystore.",
+      "sourceType": "com.ancun.boot.encrypt.KeyProperties$KeyStore"
+    },
+    {
+      "name": "encrypt.key-store.secret",
+      "type": "java.lang.String",
+      "description": "Secret protecting the key (defaults to the same as the password).",
+      "sourceType": "com.ancun.boot.encrypt.KeyProperties$KeyStore"
+    },
+    {
+      "name": "encrypt.rsa.algorithm",
+      "type": "org.springframework.security.rsa.crypto.RsaAlgorithm",
+      "description": "The RSA algorithm to use (DEFAULT or OEAP). Once it is set do not change it (or\n existing ciphers will not a decryptable).",
+      "sourceType": "com.ancun.boot.encrypt.KeyProperties$Rsa"
+    },
+    {
+      "name": "encrypt.rsa.salt",
+      "type": "java.lang.String",
+      "description": "Salt for the random secret used to encrypt cipher text. Once it is set do not\n change it (or existing ciphers will not a decryptable).",
+      "sourceType": "com.ancun.boot.encrypt.KeyProperties$Rsa",
+      "defaultValue": "deadbeef"
+    },
+    {
+      "name": "encrypt.rsa.strong",
+      "type": "java.lang.Boolean",
+      "description": "Flag to indicate that \"strong\" AES encryption should be used internally. If\n true then the GCM algorithm is applied to the AES encrypted bytes. Default is\n false (in which case \"standard\" CBC is used instead). Once it is set do not\n change it (or existing ciphers will not a decryptable).",
+      "sourceType": "com.ancun.boot.encrypt.KeyProperties$Rsa",
+      "defaultValue": false
+    }
+  ],
+  "hints": []
+}

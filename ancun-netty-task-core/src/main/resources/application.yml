@@ -22,7 +22,8 @@ spring:
     driver-class-name: com.mysql.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/demo?useUnicode=true&characterEncoding=utf8
     username: root
-    password: 123456
+#    password: 123456
+    password: '{cipher}11bbedc76a2d3ea4ca2d5eebce69bf1c99c26e2ebb3a42c713777646a85f68e9'
 
 # 任务相关配置
 task:
@@ -53,3 +54,12 @@ notice:
   emails: xieyushi@ancun.com
   # 一天允许短信通知最大次数
   maxSendTimes: 3
+
+encrypt:
+  enabled: true
+  key: foo
+#  keyStore:
+#    location: classpath:/server.jks
+#    password: letmein
+#    alias: mytestkey
+#    secret: changeme

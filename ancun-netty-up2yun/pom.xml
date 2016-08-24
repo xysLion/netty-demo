@@ -61,6 +61,12 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>com.ancun.boot</groupId>
+            <artifactId>ancun-boot-starter-encrypt</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
         <!-- ancun-netty包 -->
         <dependency>
             <groupId>com.ancun</groupId>

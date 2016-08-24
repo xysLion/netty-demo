@@ -2,6 +2,7 @@ package com.ancun.task;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ApplicationContext;
 
 /**
  * 任务模块启动
@@ -17,7 +18,8 @@ public class TaskApp {
     public static void main(String[] args) {
         SpringApplication app = new SpringApplication(TaskApp.class);
         app.setWebEnvironment(false);
-        app.run(args);
+        ApplicationContext application = app.run(args);
+        System.out.println(application.getEnvironment().getProperty("test.password"));
     }
 
 }

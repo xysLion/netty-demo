@@ -1,0 +1,7 @@
+# Autoconfiguration
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.ancun.boot.encrypt.EncryptionAutoConfiguration
+
+# Environment Post Processors
+org.springframework.boot.env.EnvironmentPostProcessor=\
+com.ancun.boot.encrypt.EncryptEnvironmentPostProcessor
