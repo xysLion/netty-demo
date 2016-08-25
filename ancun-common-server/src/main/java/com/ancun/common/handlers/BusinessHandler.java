@@ -101,7 +101,7 @@ public class BusinessHandler extends ChannelInboundHandlerAdapter{
                 content.add("mobile", content.get("phoneNo"));
             }
             Object result = dispatcherBus.post(common.getAction().trim(), content);
-            RespBody<?> respBody = new RespBody<>(result);
+            RespBody<?> respBody = new RespBody<Object>(result);
 
             // 同步返回请求
             if (!asynFlg) {

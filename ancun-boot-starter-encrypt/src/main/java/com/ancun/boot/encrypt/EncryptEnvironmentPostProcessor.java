@@ -7,7 +7,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.bind.PropertiesConfigurationFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.env.EnvironmentPostProcessor;
-import org.springframework.boot.env.PropertySourcesLoader;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.env.CompositePropertySource;
@@ -17,12 +16,12 @@ import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.PropertySources;
 import org.springframework.core.env.SystemEnvironmentPropertySource;
-import org.springframework.core.io.Resource;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
-import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -59,7 +58,8 @@ public class EncryptEnvironmentPostProcessor implements EnvironmentPostProcessor
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
         // 如果启用加密
-        if (environment.containsProperty("encrypt.enabled")) {
+        boolean encryptEnabled = environment.getProperty("encrypt.enabled", Boolean.class, false);
+        if (encryptEnabled) {
             this.propertySources = environment.getPropertySources();
             KeyProperties properties = createKey(environment, application);
             this.encryptor = EncryptorFactory.create(properties);
@@ -82,12 +82,9 @@ public class EncryptEnvironmentPostProcessor implements EnvironmentPostProcessor
                 properties);
         ConfigurationProperties annotation = AnnotationUtils
                 .findAnnotation(properties.getClass(), ConfigurationProperties.class);
-        if (annotation != null && annotation.locations().length != 0) {
-            factory.setPropertySources(loadPropertySources(environment, application, annotation.locations(), annotation.merge()));
-        }
-        else {
-            factory.setPropertySources(this.propertySources);
-        }
+
+        factory.setPropertySources(this.propertySources);
+
         if (annotation != null) {
             factory.setIgnoreInvalidFields(annotation.ignoreInvalidFields());
             factory.setIgnoreUnknownFields(annotation.ignoreUnknownFields());
@@ -114,6 +111,12 @@ public class EncryptEnvironmentPostProcessor implements EnvironmentPostProcessor
         MutablePropertySources propertySources = environment.getPropertySources();
 
         Map<String, Object> map = decrypt(propertySources);
+
+        try {
+            map.put("info.app.local", InetAddress.getLocalHost().toString());
+        } catch (UnknownHostException e) {
+            logger.warn("GET LOCAL IP FAILE", e);
+        }
 
         propertySources.addFirst(new SystemEnvironmentPropertySource(DECRYPTED_PROPERTY_SOURCE_NAME, map));
     }
@@ -183,34 +186,6 @@ public class EncryptEnvironmentPostProcessor implements EnvironmentPostProcessor
 
         }
 
-    }
-
-    private PropertySources loadPropertySources(
-            ConfigurableEnvironment environment, SpringApplication application,
-            String[] locations, boolean mergeDefaultSources) {
-        try {
-            PropertySourcesLoader loader = new PropertySourcesLoader();
-            for (String location : locations) {
-                Resource resource = application.getResourceLoader()
-                        .getResource(environment.resolvePlaceholders(location));
-                String[] profiles = environment.getActiveProfiles();
-                for (int i = profiles.length; i-- > 0;) {
-                    String profile = profiles[i];
-                    loader.load(resource, profile);
-                }
-                loader.load(resource);
-            }
-            MutablePropertySources loaded = loader.getPropertySources();
-            if (mergeDefaultSources) {
-                for (PropertySource<?> propertySource : this.propertySources) {
-                    loaded.addLast(propertySource);
-                }
-            }
-            return loaded;
-        }
-        catch (IOException ex) {
-            throw new IllegalStateException(ex);
-        }
     }
 
     private String getAnnotationDetails(ConfigurationProperties annotation) {
