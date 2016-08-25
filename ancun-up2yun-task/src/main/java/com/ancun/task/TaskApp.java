@@ -19,7 +19,6 @@ public class TaskApp {
         SpringApplication app = new SpringApplication(TaskApp.class);
         app.setWebEnvironment(false);
         ApplicationContext application = app.run(args);
-        System.out.println(application.getEnvironment().getProperty("test.password"));
     }
 
 }

@@ -1,9 +1,10 @@
 # 应用信息(app info)
 info:
   app:
-    name: 上传任务
-    description: 将任务中定义的文件上传到云的任务模块
-    version: 1.0.0
+    name: @artifactId@
+    description: 将任务表记录中记录的文件上传到云的任务模块
+    version: @version@
+    directory: ${user.dir}
 
 # 日志相关配置(logging setting)
 logging:
