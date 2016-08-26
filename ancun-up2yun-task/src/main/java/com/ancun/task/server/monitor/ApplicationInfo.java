@@ -1,6 +1,6 @@
 package com.ancun.task.server.monitor;
 
-import com.ancun.task.constant.Constant;
+import com.ancun.task.constant.MsgConstant;
 import com.ancun.task.entity.TaskStatusInfo;
 import com.ancun.task.server.ServerManager;
 import com.ancun.task.service.ScanService;
@@ -54,21 +54,21 @@ public class ApplicationInfo {
         // 未完成任务信息
         List<TaskStatusInfo> noCompletes = scanService.notCompleteTaskCount();
 
-//        String noCompletesMessage = SpringContextUtil.getMessage(Constant.NOCOMPLETE_TASK_COUNT,
+//        String noCompletesMessage = SpringContextUtil.getMessage(MsgConstant.NOCOMPLETE_TASK_COUNT,
 //                new Object[]{ noCompletes.toString() });
-        String noCompletesMessage = String.format(Constant.NOCOMPLETE_TASK_COUNT, noCompletes.toString());
+        String noCompletesMessage = String.format(MsgConstant.NOCOMPLETE_TASK_COUNT, noCompletes.toString());
 
         // 未开始任务信息
         List<TaskStatusInfo> noStarts = scanService.notStartTaskCount();
-//        String noStartsMessage = SpringContextUtil.getMessage(Constant.NOSTART_TASK_COUNT,
+//        String noStartsMessage = SpringContextUtil.getMessage(MsgConstant.NOSTART_TASK_COUNT,
 //                new Object[]{noStarts.toString()});
-        String noStartsMessage = String.format(Constant.NOSTART_TASK_COUNT, noStarts.toString());
+        String noStartsMessage = String.format(MsgConstant.NOSTART_TASK_COUNT, noStarts.toString());
 
         // 执行中任务信息
         List<TaskStatusInfo> handlings = scanService.handlingTaskCount();
-//        String handlingsMessage = SpringContextUtil.getMessage(Constant.NOSTART_TASK_COUNT,
+//        String handlingsMessage = SpringContextUtil.getMessage(MsgConstant.NOSTART_TASK_COUNT,
 //                new Object[]{handlings.toString()});
-        String handlingsMessage = String.format(Constant.HANDLING_TASK_COUNT, handlings);
+        String handlingsMessage = String.format(MsgConstant.HANDLING_TASK_COUNT, handlings);
 
         return Joiner.on(JOINER_STRING)
                 .skipNulls()

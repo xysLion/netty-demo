@@ -1,5 +1,13 @@
 package com.ancun.task.constant;
 
+import com.google.common.net.InetAddresses;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 /**
  * 业务常量类
  *
@@ -9,6 +17,8 @@ package com.ancun.task.constant;
  * @Copyright:杭州安存网络科技有限公司 Copyright (c) 2015
  */
 public class BussinessConstant {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BussinessConstant.class);
 
     /** 上传OSS时显示文件名 */
     public static final String FILE_KEY = "fileKey";
@@ -37,7 +47,18 @@ public class BussinessConstant {
     /** 成功 */
     public static final int SUCCESS = 100000;
 
-    /** 系统异常 */
-    public static final int SYSTEM_EXCEPTION = 100001;
+    /** 本地IP地址 */
+    public static final InetAddress LOCALHOST;
+
+    static {
+        InetAddress localhost = null;
+        try {
+            localhost = InetAddress.getLocalHost();
+        } catch (UnknownHostException e) {
+            LOGGER.warn("error then get host info", e);
+            localhost = InetAddresses.forString("127.0.0.1");
+        }
+        LOCALHOST = localhost;
+    }
 
 }

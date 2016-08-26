@@ -2,6 +2,14 @@ package com.ancun.up2yun.constant;
 
 import com.google.gson.Gson;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
+import io.netty.util.NetUtil;
+
 /**
  * 业务常量类
  *
@@ -11,6 +19,8 @@ import com.google.gson.Gson;
  * @Copyright:杭州安存网络科技有限公司 Copyright (c) 2015
  */
 public class BussinessConstant {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BussinessConstant.class);
 
     /** 用户meta信息前缀 */
     public static final String USER_META_INFO_PREFIX = "x-oss-meta-";
@@ -35,5 +45,19 @@ public class BussinessConstant {
 
     /** gson工具类 */
     public static final Gson GSON = new Gson();
+
+    /** 本地IP地址 */
+    public static final InetAddress LOCALHOST;
+
+    static {
+        InetAddress localhost = null;
+        try {
+            localhost = InetAddress.getLocalHost();
+        } catch (UnknownHostException e) {
+            LOGGER.warn("error then get host info", e);
+            localhost = NetUtil.LOCALHOST4;
+        }
+        LOCALHOST = localhost;
+    }
 
 }

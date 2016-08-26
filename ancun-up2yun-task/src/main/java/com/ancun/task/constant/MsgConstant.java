@@ -8,28 +8,7 @@ package com.ancun.task.constant;
  * @version 1.0
  * @Copyright:杭州安存网络科技有限公司 Copyright (c) 2015
  */
-public class Constant {
-
-    /** 任务执行间隔时间 */
-    public static final String DURATION = "duration";
-
-    /** 任务类型前缀 */
-    public static final String TASK_TYPE_PREFIX = "task.type.prefix";
-
-    /** 一次取得任务数 */
-    public static final String TASK_MAX_NUM = "task.max.num";
-
-    /** 一天允许短信通知最大次数 */
-    public static final String NOTICED_PHONE_ALLOW_TIMES = "noticed.phone.allow.times";
-
-    /** 被通知电话号码 */
-    public static final String NOTICED_PHONE_NUMBER = "noticed.phone.number";
-
-    /** 被通知邮箱地址 */
-    public static final String NOTICED_EMAIL_TO = "noticed.email.to";
-
-    /** 通知服务器地址 */
-    public static final String NOTICE_URL = "notice.url";
+public class MsgConstant {
 
     /** 未完成任务数 */
     public static final String NOCOMPLETE_TASK_COUNT = "未完成任务信息：%s";

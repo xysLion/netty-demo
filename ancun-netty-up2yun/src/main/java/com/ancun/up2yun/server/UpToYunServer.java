@@ -6,7 +6,6 @@ import com.google.common.util.concurrent.Service;
 
 import com.ancun.netty.httpserver.HttpServer;
 import com.ancun.up2yun.constant.MsgConstant;
-import com.ancun.up2yun.utils.HostUtil;
 import com.ancun.up2yun.utils.NoticeUtil;
 
 import org.slf4j.Logger;
@@ -15,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+
+import static com.ancun.up2yun.constant.BussinessConstant.LOCALHOST;
 
 /**
  * 上传组件接收客户端请求netty服务
@@ -90,7 +91,7 @@ public class UpToYunServer implements CommandLineRunner {
 
                 // 构建信息
                 String message = String.format(MsgConstant.SERVER_EXCEPTION_INFO,
-                        HostUtil.getHostInfo().getAddress(),
+                        LOCALHOST.getHostAddress(),
                         serverName,
                         failure.getCause()
                 );

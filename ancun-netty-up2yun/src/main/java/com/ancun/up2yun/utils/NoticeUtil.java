@@ -22,6 +22,7 @@ import javax.annotation.Resource;
 import io.netty.util.CharsetUtil;
 
 import static com.ancun.up2yun.constant.BussinessConstant.GSON;
+import static com.ancun.up2yun.constant.BussinessConstant.LOCALHOST;
 
 /**
  * 发送通知工具类。
@@ -81,7 +82,7 @@ public class NoticeUtil {
     private Map<String, String> baseContent(String subject, String message) {
         Map<String, String> content = Maps.newHashMap();
 
-        String localIp = HostUtil.getHostInfo().getAddress();
+        String localIp = LOCALHOST.getHostAddress();
 
         String msg = "服务器IP[" + localIp + "]：<br/>" + message;
 

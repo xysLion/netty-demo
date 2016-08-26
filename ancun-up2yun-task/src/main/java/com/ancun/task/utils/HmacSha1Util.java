@@ -1,12 +1,15 @@
 package com.ancun.task.utils;
 
+import com.google.common.base.Strings;
+
 import org.apache.commons.codec.binary.Base64;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  * HmacSHA1加密工具类。
@@ -37,8 +40,8 @@ public class HmacSha1Util {
             NoSuchAlgorithmException, IllegalStateException,
             UnsupportedEncodingException {
 
-        return StringUtil.trimToEmpty(Base64.encodeBase64String(sign(data, key,
-                charsetName)));
+        return Strings.nullToEmpty(Base64.encodeBase64String(sign(data, key,
+                charsetName))).trim();
     }
 
 }

@@ -4,7 +4,7 @@ import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import com.ancun.task.cfg.TaskProperties;
-import com.ancun.task.constant.Constant;
+import com.ancun.task.constant.MsgConstant;
 import com.ancun.task.server.ServerManager;
 import com.ancun.task.utils.NoticeUtil;
 
@@ -81,7 +81,7 @@ public class MonitorServer {
             // 获取监视信息
             String message = applicationInfo.monitor();
             // 通知管理员
-            noticeUtil.sendNotice(Constant.UPLOAD_MONITOR, message);
+            noticeUtil.sendNotice(MsgConstant.UPLOAD_MONITOR, message);
 
             logger.info(message);
 

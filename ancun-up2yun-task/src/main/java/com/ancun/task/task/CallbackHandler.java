@@ -1,19 +1,19 @@
 package com.ancun.task.task;
 
+import com.google.common.base.Charsets;
+import com.google.common.hash.Hashing;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import com.ancun.task.cfg.TaskProperties;
 import com.ancun.task.constant.BussinessConstant;
-import com.ancun.task.constant.Constant;
+import com.ancun.task.constant.MsgConstant;
 import com.ancun.task.dao.TaskDao;
 import com.ancun.task.domain.request.ReqBody;
 import com.ancun.task.domain.request.ReqCommon;
 import com.ancun.task.domain.response.RespJson;
 import com.ancun.task.entity.Task;
 import com.ancun.task.utils.HmacSha1Util;
-import com.ancun.task.utils.HostUtil;
-import com.ancun.task.utils.MD5Util;
 import com.ancun.task.utils.NoticeUtil;
 import com.ancun.task.utils.TaskUtil;
 import com.ancun.task.utils.task.HandleTask;
@@ -36,6 +36,8 @@ import java.lang.reflect.Type;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.ancun.task.constant.BussinessConstant.LOCALHOST;
 
 /**
  * 将文件上传到云的结果通知客户端
@@ -120,17 +122,17 @@ public class CallbackHandler {
             int statusCode = respJson.getResponse().getInfo().getCode();
             if(statusCode != BussinessConstant.SUCCESS){
                 retryFlg = true;
-                reason = String.format(Constant.SERVER_CALLBACK_RETRY_REASON_1, uri, getCallbackServerInfo(taskParams), response );
+                reason = String.format(MsgConstant.SERVER_CALLBACK_RETRY_REASON_1, uri, getCallbackServerInfo(taskParams), response );
             } else {
                 // 回调成功
                 taskDao.success(task);
-                logger.info(String.format(Constant.SERVER_CALLBACK_SUCCESS,
+                logger.info(String.format(MsgConstant.SERVER_CALLBACK_SUCCESS,
                         new Object[]{TaskUtil.getValue(taskParams, BussinessConstant.FILE_KEY),
-                                HostUtil.getIpv4Info().getLocalAddress(), uri}));
+                                LOCALHOST.getHostAddress(), uri}));
             }
 
         } catch (Exception e) {
-            String msg = String.format(Constant.SERVER_CALLBACK_RETRY_REASON_2,
+            String msg = String.format(MsgConstant.SERVER_CALLBACK_RETRY_REASON_2,
                     new Object[]{ uri, getCallbackServerInfo(taskParams)});
             logger.info(msg, e);
             retryFlg = true;
@@ -148,9 +150,9 @@ public class CallbackHandler {
                 // 失败
                 taskDao.fail(task);
 
-               String message = String.format(Constant.SERVER_CALLBACK_FAILURE,
+               String message = String.format(MsgConstant.SERVER_CALLBACK_FAILURE,
                         new Object[]{TaskUtil.getValue(taskParams, BussinessConstant.FILE_KEY),
-                                HostUtil.getIpv4Info().getLocalAddress(),
+                                LOCALHOST.getHostAddress(),
                                 uri,
                                 getCallbackServerInfo(taskParams),
                                 reason
@@ -159,7 +161,7 @@ public class CallbackHandler {
                 logger.info(message);
 
                 // 发送通知
-                noticeUtil.sendNotice(Constant.CALLBACK_EXCEPTION_NOTICE_TITLE, message);
+                noticeUtil.sendNotice(MsgConstant.CALLBACK_EXCEPTION_NOTICE_TITLE, message);
 
             } else {
 
@@ -169,7 +171,7 @@ public class CallbackHandler {
 
                 logger.info("文件[{}]在服务器节点[{1}]上向回调服务器[{}]发送回调请求不成功，回调服务器基础信息[{}]，已添加发送回调请求任务队列！",
                         new Object[]{TaskUtil.getValue(taskParams, BussinessConstant.FILE_KEY),
-                                HostUtil.getIpv4Info().getLocalAddress(), uri, getCallbackServerInfo(taskParams) });
+                                LOCALHOST.getHostAddress(), uri, getCallbackServerInfo(taskParams) });
             }
         }
 
@@ -210,7 +212,8 @@ public class CallbackHandler {
         logger.info("回调服务器地址信息：" + requestUri);
         try{
             if (accessKey != null && !"".equals(accessKey.toString())) {
-                String sign = HmacSha1Util.signToString(MD5Util.md5(requestJson).toLowerCase(),
+                String sign = HmacSha1Util.signToString(Hashing.md5()
+                                .hashString(requestJson, Charsets.UTF_8).toString().toLowerCase(),
                         accessKey.toString(), CHARSETNAME_DEFAULT);
                 headers.set("sign", URLEncoder.encode(sign, CHARSETNAME_DEFAULT));
             }

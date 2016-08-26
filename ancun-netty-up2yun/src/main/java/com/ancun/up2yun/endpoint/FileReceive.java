@@ -14,7 +14,6 @@ import com.ancun.up2yun.domain.common.HandleResult;
 import com.ancun.up2yun.domain.task.Task;
 import com.ancun.up2yun.domain.task.TaskDao;
 import com.ancun.up2yun.handlers.HttpUploadServerHandler;
-import com.ancun.up2yun.utils.HostUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +44,7 @@ import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 
 import static com.ancun.up2yun.constant.BussinessConstant.FILE_URL;
+import static com.ancun.up2yun.constant.BussinessConstant.LOCALHOST;
 
 /**
  * 接收文件，并添加到任务
@@ -187,7 +187,7 @@ public class FileReceive {
                 Task task = new Task();
                 task.setTaskId(String.valueOf(UUID.randomUUID()));
                 task.setReqUrl(ctx.channel().remoteAddress().toString());
-                task.setRevUrl(HostUtil.getHostInfo().getAddress());
+                task.setRevUrl(LOCALHOST.getHostAddress());
                 task.setTaskParams(BussinessConstant.GSON.toJson(taskParams));
                 task.setParamsMap(taskParams);
                 task.setComputeNum(0);

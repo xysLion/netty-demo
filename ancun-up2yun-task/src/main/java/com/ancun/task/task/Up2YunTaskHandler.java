@@ -1,11 +1,12 @@
 package com.ancun.task.task;
 
+import com.google.common.base.Strings;
 import com.google.common.eventbus.EventBus;
 import com.google.gson.Gson;
 
 import com.ancun.task.cfg.TaskProperties;
 import com.ancun.task.constant.BussinessConstant;
-import com.ancun.task.constant.Constant;
+import com.ancun.task.constant.MsgConstant;
 import com.ancun.task.constant.ProcessEnum;
 import com.ancun.task.constant.StatusEnum;
 import com.ancun.task.constant.TaskHandleTimeEnum;
@@ -13,9 +14,7 @@ import com.ancun.task.dao.TaskDao;
 import com.ancun.task.entity.Task;
 import com.ancun.task.event.Up2YunEvent;
 import com.ancun.task.listener.Up2YunListener;
-import com.ancun.task.utils.HostUtil;
 import com.ancun.task.utils.NoticeUtil;
-import com.ancun.task.utils.StringUtil;
 import com.ancun.task.utils.TaskUtil;
 import com.ancun.task.utils.task.HandleTask;
 import com.ancun.task.utils.task.TaskBus;
@@ -35,6 +34,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static com.ancun.task.constant.BussinessConstant.FILE_URL;
+import static com.ancun.task.constant.BussinessConstant.LOCALHOST;
 
 /**
  * 将文件上传到云上任务包裹类
@@ -147,7 +147,7 @@ public class Up2YunTaskHandler {
                 logger.info("文件[{}]在服务器节点[{}]上{}！",
                         new Object[]{TaskUtil.getValue(taskParams,
                                 BussinessConstant.FILE_KEY),
-                                HostUtil.getIpv4Info().getLocalAddress(), callbackResult});
+                                LOCALHOST.getHostAddress(), callbackResult});
             }
             // 否则重试
             else {
@@ -179,15 +179,15 @@ public class Up2YunTaskHandler {
                 // 上传失败
                 taskDao.fail(task);
 
-                String message = String.format(Constant.FILE_UPLOAD_FAILURE,
+                String message = String.format(MsgConstant.FILE_UPLOAD_FAILURE,
                         new Object[]{TaskUtil.getValue(taskParams,
                                 BussinessConstant.FILE_KEY),
-                                HostUtil.getIpv4Info().getLocalAddress(),
+                                LOCALHOST.getHostAddress(),
                                 callbackResult,
                                 getYunInfo(taskParams),
                                 reason
                         });
-                noticeUtil.sendNotice(Constant.UPLOAD_EXCEPTION_NOTICE_TITLE, message);
+                noticeUtil.sendNotice(MsgConstant.UPLOAD_EXCEPTION_NOTICE_TITLE, message);
                 logger.info(message);
             } else {
 
@@ -198,7 +198,7 @@ public class Up2YunTaskHandler {
                 logger.info("文件[{}]在服务器节点[{}]上{}，上传到云的信息[{}]，已添加重试上传任务队列。",
                         new Object[]{TaskUtil.getValue(taskParams,
                                 BussinessConstant.FILE_KEY),
-                                HostUtil.getIpv4Info().getLocalAddress(),
+                                LOCALHOST.getHostAddress(),
                                 callbackResult,
                                 getYunInfo(taskParams)
                         });
@@ -210,11 +210,11 @@ public class Up2YunTaskHandler {
 
             // 插入回调任务
             task.setTaskId(String.valueOf(UUID.randomUUID()));
-            task.setReqUrl(HostUtil.getIpv4Info().getLocalAddress());
+            task.setReqUrl(LOCALHOST.getHostAddress());
             // 接收方uri
             String uri = TaskUtil.getValue(taskParams, BussinessConstant.CALLBACK_URI);
             // uri解密
-            uri = StringUtil.isBlank(uri)?uri: DESUtils.decrypt(uri, null);
+            uri = Strings.isNullOrEmpty(uri) ? uri: DESUtils.decrypt(uri, null);
             task.setRevUrl(uri);
             taskParams.put("callbackResult", callbackResult);
             taskParams.put("callbackCode", callbackCode);
@@ -231,7 +231,7 @@ public class Up2YunTaskHandler {
             logger.info("文件[{}]在服务器节点[{}]上添加进发送回调信息任务队列。",
                     new Object[]{TaskUtil.getValue(taskParams,
                             BussinessConstant.FILE_KEY),
-                            HostUtil.getIpv4Info().getLocalAddress()});
+                            LOCALHOST.getHostAddress()});
         }
 
         // 接收文件请求结束

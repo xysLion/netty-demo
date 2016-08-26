@@ -1,20 +1,23 @@
 package com.ancun.common.utils;
 
-import com.ancun.utils.taskbus.IndexTask;
-import com.ancun.utils.taskbus.TaskBus;
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
+
+import com.ancun.utils.taskbus.IndexTask;
+import com.ancun.utils.taskbus.TaskBus;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import javax.annotation.Nullable;
 
 /**
  * 短信发送总线
@@ -86,7 +89,7 @@ public class SmsTaskBus extends TaskBus {
      * @return              排序方法
      */
     private Ordering<IndexTask> sortedList(final int specialIndex){
-        return Ordering.from(specialFirst(specialIndex)).onResultOf(new Function<IndexTask, Integer>() {
+        return specialFirst(specialIndex).onResultOf(new Function<IndexTask, Integer>() {
             @Nullable
             @Override
             public Integer apply(@Nullable IndexTask input) {

@@ -20,6 +20,8 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
+import static com.ancun.task.constant.BussinessConstant.LOCALHOST;
+
 /**
  * 发送通知工具类。
  *
@@ -85,7 +87,7 @@ public class NoticeUtil {
     private Map<String, String> baseContent(String subject, String message) {
         Map<String, String> content = Maps.newHashMap();
 
-        String localIp = HostUtil.getHostInfo().getAddress();
+        String localIp = LOCALHOST.getHostAddress();
 
         String msg = "服务器IP[" + localIp + "]：<br/>" + message;
 

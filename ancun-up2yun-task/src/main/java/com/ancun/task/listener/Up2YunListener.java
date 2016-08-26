@@ -4,14 +4,13 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
 import com.google.common.math.LongMath;
 
 import com.ancun.task.cfg.TaskProperties;
 import com.ancun.task.event.Up2YunEvent;
-import com.ancun.task.utils.MD5Util;
-import com.ancun.task.utils.StringUtil;
 import com.ancun.task.utils.TaskUtil;
 import com.ancun.thirdparty.aliyun.oss.AliyunOSS;
 import com.ancun.thirdparty.baiduyun.bos.BaiduyunBOS;
@@ -217,7 +216,7 @@ public class Up2YunListener {
 
             // 默认上传到阿里云OSS（0：阿里云OSS）
             String yunType = TaskUtil.getValue(taskParams, YUN_TYPE);
-            yunType = StringUtil.isBlank(yunType) ? DEFAULT_YUN : yunType;
+            yunType = Strings.isNullOrEmpty(yunType) ? DEFAULT_YUN : yunType;
 
             // 重试上传到云
             String retryUp2YunType = TaskUtil.getValue(taskParams, RETRY_UP_YUN_TYPE);
@@ -413,9 +412,9 @@ public class Up2YunListener {
 					length = fileLength - offset;
 				}
 				ByteSource byteSourceTemp = byteSource.slice(offset, length);
-				md5 += MD5Util.md5(byteSourceTemp.openStream()).toUpperCase();
+				md5 += Hashing.md5().hashBytes(byteSourceTemp.read()).toString().toUpperCase();
             }
-            md5 = MD5Util.md5(md5).toUpperCase() + "-" + partNum;
+            md5 = Hashing.md5().hashBytes(md5.getBytes()).toString().toUpperCase() + "-" + partNum;
         }
 
         return md5;

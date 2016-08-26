@@ -2,14 +2,15 @@ package com.ancun.task.server.taskstatus;
 
 import com.google.common.util.concurrent.Service;
 
-import com.ancun.task.constant.Constant;
-import com.ancun.task.utils.HostUtil;
+import com.ancun.task.constant.MsgConstant;
 import com.ancun.task.utils.NoticeUtil;
 
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+
+import static com.ancun.task.constant.BussinessConstant.LOCALHOST;
 
 /**
  * 上传组件任务状态重置服务监听器
@@ -37,13 +38,13 @@ public class UploadTaskStatusResetServerListener extends TaskStatusResetServerLi
     public void terminated(Service.State from) {
 
         // 构建信息
-        String message = String.format(Constant.SERVER_STOP_INFO,
-                HostUtil.getIpv4Info().getLocalAddress(),
+        String message = String.format(MsgConstant.SERVER_STOP_INFO,
+                LOCALHOST.getHostAddress(),
                 serverName
         );
 
         // 通知管理员
-        noticeUtil.sendNotice(Constant.SERVER_EXCEPTION, message);
+        noticeUtil.sendNotice(MsgConstant.SERVER_EXCEPTION, message);
 
         logger.info(message);
     }
@@ -58,14 +59,14 @@ public class UploadTaskStatusResetServerListener extends TaskStatusResetServerLi
     public void failed(Service.State from, Throwable failure) {
 
         // 构建信息
-        String message = String.format(Constant.SERVER_EXCEPTION_INFO,
-                HostUtil.getIpv4Info().getLocalAddress(),
+        String message = String.format(MsgConstant.SERVER_EXCEPTION_INFO,
+                LOCALHOST.getHostAddress(),
                 serverName,
                 failure.getCause()
         );
 
         // 通知管理员
-        noticeUtil.sendNotice(Constant.SERVER_EXCEPTION, message);
+        noticeUtil.sendNotice(MsgConstant.SERVER_EXCEPTION, message);
 
         logger.info(message);
     }
