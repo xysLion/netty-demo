@@ -28,13 +28,25 @@ public class IpFilter extends RuleBasedIpFilter {
     }
 
     /**
+     * 该请求来源地址是否符合规则
+     *
+     * @param ctx           通道信息
+     * @param remoteAddress IP相关信息
+     * @return              判断结果
+     * @throws Exception    异常信息
+     */
+    public boolean accept(ChannelHandlerContext ctx, InetSocketAddress remoteAddress) throws Exception {
+        return super.accept(ctx, remoteAddress);
+    }
+
+    /**
      * 返回请求拒绝信息
      *
      * @return A {@link ChannelFuture} if you perform I/O operations, so that
      *         the {@link Channel} can be closed once it completes. Null otherwise.
      */
     @SuppressWarnings("UnusedParameters")
-    protected ChannelFuture channelRejected(ChannelHandlerContext ctx, InetSocketAddress remoteAddress) {
+    public ChannelFuture channelRejected(ChannelHandlerContext ctx, InetSocketAddress remoteAddress) {
 
         Error error = new Error();
         error.setError(HttpResponseStatus.FORBIDDEN.reasonPhrase());

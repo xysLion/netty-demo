@@ -5,15 +5,21 @@ import com.ancun.up2yun.domain.common.HandleResult;
 import com.ancun.up2yun.endpoint.FileDelete;
 import com.ancun.up2yun.endpoint.FileReceive;
 import com.ancun.up2yun.endpoint.FileSend;
+import com.ancun.up2yun.iplimit.IpFilter;
+import com.ancun.up2yun.iplimit.IpLimitProperties;
 import com.ancun.up2yun.utils.NettyResult;
 import com.ancun.up2yun.utils.NoticeUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
+
+import java.net.InetSocketAddress;
 
 import javax.annotation.Resource;
 
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -33,9 +39,14 @@ import io.netty.handler.codec.http.HttpResponseStatus;
  */
 @Component(value = "httpUploadServerHandler")
 @ChannelHandler.Sharable
+@EnableConfigurationProperties({IpLimitProperties.class})
 public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObject> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(HttpUploadServerHandler.class);
+
+    /** IP 过滤 */
+    @Resource
+    private IpFilter ipFilter;
 
 	/** 通知组件 */
 	@Resource
@@ -55,6 +66,13 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
 
     @Override
     public void channelRead0(ChannelHandlerContext ctx, HttpObject msg) throws Exception {
+
+        // 判断IP
+        InetSocketAddress inetSocketAddress = (InetSocketAddress)ctx.channel().remoteAddress();
+        if (!ipFilter.accept(ctx, inetSocketAddress)) {
+            ipFilter.channelRejected(ctx, inetSocketAddress).addListener(ChannelFutureListener.CLOSE);
+            return;
+        }
 
     	if (msg instanceof HttpRequest) {
             HttpRequest request = (HttpRequest) msg;

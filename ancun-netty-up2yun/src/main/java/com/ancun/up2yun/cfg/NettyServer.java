@@ -10,19 +10,21 @@ import com.ancun.up2yun.iplimit.IpFilter;
 import com.ancun.up2yun.iplimit.IpLimitProperties;
 import com.ancun.up2yun.iplimit.Ipv4FilterRule;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.net.InetSocketAddress;
 import java.security.cert.CertificateException;
 import java.util.List;
 
 import javax.annotation.Resource;
 import javax.net.ssl.SSLException;
 
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.ipfilter.IpFilterRuleType;
-import io.netty.handler.ipfilter.RuleBasedIpFilter;
 
 /**
  * 上传组件服务配置信息
@@ -46,8 +48,20 @@ public class NettyServer {
     private HttpUploadServerHandler handler;
 
     @Bean
+    @ConditionalOnMissingBean(IpFilter.class)
+    public IpFilter noIpFilter(){
+
+        return new IpFilter(new Ipv4FilterRule[]{}){
+            @Override
+            public boolean accept(ChannelHandlerContext ctx, InetSocketAddress remoteAddress) throws Exception {
+                return true;
+            }
+        };
+    }
+
+    @Bean
     @ConditionalOnProperty("ipLimit.enabled")
-    public RuleBasedIpFilter basedIpFilter(){
+    public IpFilter basedIpFilter(){
         List<Ipv4FilterRule> rejects =
                 FluentIterable.from(ipLimit.getRejects())
                         .transform(changeIpFilterRule(IpFilterRuleType.REJECT)).toList();
@@ -69,9 +83,9 @@ public class NettyServer {
                 .setMaxContentSize((int)properties.getMaxContentSize())
                 .setPort(properties.getPort());
 
-        if (ipLimit.isEnabled()) {
-            server.addRequestHandler(basedIpFilter());
-        }
+//        if (ipLimit.isEnabled()) {
+//            server.addRequestHandler(basedIpFilter());
+//        }
 
         server.addRequestHandler(handler);
 
