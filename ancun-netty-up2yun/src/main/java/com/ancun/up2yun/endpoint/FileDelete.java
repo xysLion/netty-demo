@@ -13,7 +13,9 @@ import java.io.IOException;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpRequest;
 
+import static com.ancun.up2yun.utils.NettyResult.errorHandleResult;
 import static io.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
+import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 
 /**
@@ -46,32 +48,24 @@ public class FileDelete extends FileBase {
 
         // 路径为空
         if (path == null) {
-            return new HandleResult()
-                    .setStatus(FORBIDDEN)
-                    .setMessage("该端点必须要有文件名作为路径.");
+            return errorHandleResult(FORBIDDEN, "该端点必须要有文件名作为路径.");
         }
 
         // 文件不存在
         File file = new File(path);
         if (file.isHidden() || !file.exists()) {
-            return new HandleResult()
-                    .setStatus(FORBIDDEN)
-                    .setMessage("该端点必须要有文件名作为路径.");
+            return errorHandleResult(NOT_FOUND, "文件不存在.");
         }
 
         // 不为文件
         if (!file.isFile()) {
-            return new HandleResult()
-                    .setStatus(FORBIDDEN)
-                    .setMessage("该端点必须要有文件名作为路径.");
+            return errorHandleResult(FORBIDDEN, "只允许取得文件.");
         }
 
         // 删除文件
         file.delete();
 
-        return new HandleResult()
-                .setStatus(OK)
-                .setMessage("删除成功.");
+        return new HandleResult<String>(OK, "删除成功.");
 
     }
 

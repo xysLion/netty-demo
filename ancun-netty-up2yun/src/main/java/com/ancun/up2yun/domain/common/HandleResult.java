@@ -10,13 +10,21 @@ import io.netty.handler.codec.http.HttpResponseStatus;
  * @Created on 2016/8/19
  * @Copyright 杭州安存网络科技有限公司 Copyright (c) 2016
  */
-public class HandleResult {
+public class HandleResult<T> {
 
     /** 处理结果 */
     private HttpResponseStatus status;
 
     /** 处理结果信息 */
-    private String message;
+    private T content;
+
+    public HandleResult() {
+    }
+
+    public HandleResult(HttpResponseStatus status, T message) {
+        this.status = status;
+        this.content = message;
+    }
 
     public HttpResponseStatus getStatus() {
         return status;
@@ -27,12 +35,11 @@ public class HandleResult {
         return this;
     }
 
-    public String getMessage() {
-        return message;
+    public T getContent() {
+        return content;
     }
 
-    public HandleResult setMessage(String message) {
-        this.message = message;
-        return this;
+    public void setContent(T content) {
+        this.content = content;
     }
 }

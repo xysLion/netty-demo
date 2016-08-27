@@ -3,9 +3,10 @@ package com.ancun.up2yun.endpoint;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 import com.google.common.hash.Hashing;
-import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
+import com.google.common.net.HostAndPort;
 
 import com.ancun.up2yun.cfg.NettyProperties;
 import com.ancun.up2yun.constant.BussinessConstant;
@@ -14,6 +15,7 @@ import com.ancun.up2yun.domain.common.HandleResult;
 import com.ancun.up2yun.domain.task.Task;
 import com.ancun.up2yun.domain.task.TaskDao;
 import com.ancun.up2yun.handlers.HttpUploadServerHandler;
+import com.ancun.up2yun.utils.NettyResult;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +30,6 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpContent;
@@ -70,17 +71,17 @@ public class FileReceive {
 
     private ThreadLocal<HttpPostRequestDecoder> decoderLocal = new ThreadLocal<HttpPostRequestDecoder>();
 
-    /** 本地路径 */
-    private ThreadLocal<String> urlLocal = new ThreadLocal<String>();
-
     /** 临时文件夹 */
     private final String tempDir;
 
     /** 任务操作Dao */
     private final TaskDao taskDao;
 
+    /** 该端点请求地址 */
+    private final String LOCALURI;
+
     /** 执行任务所需的参数 */
-    private ConcurrentHashMap<String, Object> taskParams = new ConcurrentHashMap<String, Object>();
+    private ThreadLocal<Map<String, Object>> taskParamsLocal = new ThreadLocal<Map<String, Object>>();
 
     // 开始执行时间
     private volatile long beginTime = 0;
@@ -92,6 +93,12 @@ public class FileReceive {
 
         this.taskDao = taskDao;
 
+        this.LOCALURI = Joiner.on("").join(
+                "http://",
+                HostAndPort.fromParts(LOCALHOST.getHostAddress(), properties.getPort()),
+                "/"
+                );
+
     }
 
     /**
@@ -102,129 +109,125 @@ public class FileReceive {
      */
     public HandleResult receiveFile(ChannelHandlerContext ctx, HttpRequest msg) throws Exception {
 
-        // 开始接收文件
-        beginTime = System.currentTimeMillis();
-        LOGGER.info("接收文件请求读取开始：{}", new Object[]{beginTime});
-
-        // 取得本地路径
-        if (urlLocal.get() == null) {
-            urlLocal.set(Joiner.on("").join(
-                    "http:/",
-                    ctx.channel().localAddress().toString(),
-                    "/"
-            ));
+        Map<String, Object> taskParams = taskParamsLocal.get();
+        if (taskParams == null) {
+            taskParams = Maps.newHashMap();
+            taskParamsLocal.set(taskParams);
         }
 
-        if (requestLocal.get() == null) {
-            requestLocal.set(msg);
-        }
+        try {
+            // 开始接收文件
+            beginTime = System.currentTimeMillis();
+            LOGGER.info("接收文件请求读取开始：{}", new Object[]{beginTime});
 
-        HttpRequest request = requestLocal.get();
-
-        // 设置用户meta信息
-        Map<String, String> metadata = new HashMap<String, String>();
-        for (Map.Entry<String, String> entry : request.headers()) {
-            if (entry.getKey().startsWith(BussinessConstant.USER_META_INFO_PREFIX)) {
-                metadata.put(entry.getKey(), entry.getValue());
+            if (requestLocal.get() == null) {
+                requestLocal.set(msg);
             }
-        }
-        taskParams.put("user_meta_info", metadata);
 
-        if (request.getMethod() == HttpMethod.POST) {
-            if (decoderLocal.get() != null) {
-                decoderLocal.get().cleanFiles();
-                decoderLocal.remove();
-            }
-            try {
-                if (decoderLocal.get() == null) {
-                    decoderLocal.set(new HttpPostRequestDecoder(factory, request));
+            HttpRequest request = requestLocal.get();
+
+            // 设置用户meta信息
+            Map<String, String> metadata = new HashMap<String, String>();
+            for (Map.Entry<String, String> entry : request.headers()) {
+                if (entry.getKey().startsWith(BussinessConstant.USER_META_INFO_PREFIX)) {
+                    metadata.put(entry.getKey(), entry.getValue());
                 }
-            } catch (Exception e) {
-                LOGGER.error("解析请求体出现异常：", e);
-                return new HandleResult()
-                        .setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR)
-                        .setMessage(e.getMessage());
-            }
-        }
-
-        HttpPostRequestDecoder decoder = decoderLocal.get();
-
-        if (decoder != null && msg instanceof HttpContent) {
-            HttpContent chunk = (HttpContent) msg;
-
-            try {
-                decoder.offer(chunk);
-            } catch (Exception e) {
-                LOGGER.info("请求体解析异常", e);
-                return new HandleResult()
-                        .setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR)
-                        .setMessage(e.getMessage());
             }
 
-            readHttpDataChunkByChunk();
+            taskParams.put("user_meta_info", metadata);
 
-            if (chunk instanceof LastHttpContent) {
+            if (request.getMethod() == HttpMethod.POST) {
+                if (decoderLocal.get() != null) {
+                    decoderLocal.get().cleanFiles();
+                    decoderLocal.remove();
+                }
+                try {
+                    if (decoderLocal.get() == null) {
+                        decoderLocal.set(new HttpPostRequestDecoder(factory, request));
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("解析请求体出现异常：", e);
+                    return NettyResult.errorHandleResult(HttpResponseStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+                }
+            }
 
-                // 文件完整性校验
-                String checkResult = fileIntegrityCheck(ctx, taskParams);
-                if (!Strings.isNullOrEmpty(checkResult)) {
-                    HttpResponseStatus status = new HttpResponseStatus(10001, checkResult);
-                    return new HandleResult()
-                            .setStatus(status)
-                            .setMessage(checkResult);
+            HttpPostRequestDecoder decoder = decoderLocal.get();
+
+            if (decoder != null && msg instanceof HttpContent) {
+                HttpContent chunk = (HttpContent) msg;
+
+                try {
+                    decoder.offer(chunk);
+                } catch (Exception e) {
+                    LOGGER.info("请求体解析异常", e);
+                    return NettyResult.errorHandleResult(HttpResponseStatus.INTERNAL_SERVER_ERROR, e.getMessage());
                 }
 
-                // 如果上传到OSS的Key为空则用文件名
-                if (taskParams.get(BussinessConstant.FILE_KEY) == null
-                        || "".equals(taskParams.get(BussinessConstant.FILE_KEY).toString())) {
-                    taskParams.put(BussinessConstant.FILE_KEY, taskParams.get(BussinessConstant.FILE_NAME).toString());
+                readHttpDataChunkByChunk();
+
+                if (chunk instanceof LastHttpContent) {
+
+                    // 文件完整性校验
+                    String checkResult = fileIntegrityCheck(ctx, taskParams);
+                    if (!Strings.isNullOrEmpty(checkResult)) {
+                        HttpResponseStatus status = new HttpResponseStatus(10001, checkResult);
+                        return NettyResult.errorHandleResult(HttpResponseStatus.BAD_REQUEST, checkResult);
+                    }
+
+                    // 如果上传到OSS的Key为空则用文件名
+                    if (taskParams.get(BussinessConstant.FILE_KEY) == null
+                            || "".equals(taskParams.get(BussinessConstant.FILE_KEY).toString())) {
+                        taskParams.put(BussinessConstant.FILE_KEY, taskParams.get(BussinessConstant.FILE_NAME).toString());
+                    }
+
+                    // 开始持久化数据(将任务持久化到数据库)
+                    long beginSaveTaskTime = System.currentTimeMillis();
+
+                    // 持久化信息
+                    Task task = new Task();
+                    task.setTaskId(String.valueOf(UUID.randomUUID()));
+                    task.setReqUrl(ctx.channel().remoteAddress().toString());
+                    task.setRevUrl(LOCALHOST.getHostAddress());
+                    task.setTaskParams(BussinessConstant.GSON.toJson(taskParams));
+                    task.setParamsMap(taskParams);
+                    task.setComputeNum(0);
+                    task.setTaskHandler(BussinessConstant.UPTOYUN);
+                    task.setTaskStatus(BussinessConstant.UN_PROCESS);
+                    task.setGmtCreate(new Timestamp(System.currentTimeMillis()));
+                    task.setGmtHandle(new Timestamp(System.currentTimeMillis()));
+                    taskDao.addTask(task);
+
+                    // 接收文件请求结束
+                    long endSaveTaskTime = System.currentTimeMillis();
+                    LOGGER.info("文件 ：[{}] 持久化数据(将任务持久化到数据库)总共花费时间：{}ms", new Object[]{
+                            taskParams.get(BussinessConstant.FILE_KEY),
+                            (endSaveTaskTime - beginSaveTaskTime)});
+
+                    // 反馈消息给客户端
+                    long endResponseTime = System.currentTimeMillis();
+                    LOGGER.info("文件 ：[{}] 反馈消息给客户端总共花费时间：{}ms", new Object[]{
+                            taskParams.get(BussinessConstant.FILE_KEY),
+                            (endResponseTime - beginTime)});
+
+                    // 组建正常信息
+                    String okMsg = String.format(
+                            MsgConstant.SERVER_NODE_INFO + MsgConstant.FILE_RECEIVE_SUCCESS,
+                            ctx.channel().localAddress().toString(),
+                            ctx.channel().remoteAddress().toString(),
+                            taskParams.get(BussinessConstant.FILE_KEY).toString()
+                    );
+
+                    reset();
+
+                    return new HandleResult<String>(HttpResponseStatus.OK, okMsg);
                 }
-
-                // 开始持久化数据(将任务持久化到数据库)
-                long beginSaveTaskTime = System.currentTimeMillis();
-
-                // 持久化信息
-                Task task = new Task();
-                task.setTaskId(String.valueOf(UUID.randomUUID()));
-                task.setReqUrl(ctx.channel().remoteAddress().toString());
-                task.setRevUrl(LOCALHOST.getHostAddress());
-                task.setTaskParams(BussinessConstant.GSON.toJson(taskParams));
-                task.setParamsMap(taskParams);
-                task.setComputeNum(0);
-                task.setTaskHandler(BussinessConstant.UPTOYUN);
-                task.setTaskStatus(BussinessConstant.UN_PROCESS);
-                task.setGmtCreate(new Timestamp(System.currentTimeMillis()));
-                task.setGmtHandle(new Timestamp(System.currentTimeMillis()));
-                taskDao.addTask(task);
-
-                // 接收文件请求结束
-                long endSaveTaskTime = System.currentTimeMillis();
-                LOGGER.info("文件 ：[{}] 持久化数据(将任务持久化到数据库)总共花费时间：{}ms", new Object[]{
-                        taskParams.get(BussinessConstant.FILE_KEY),
-                        (endSaveTaskTime - beginSaveTaskTime)});
-
-                reset();
-
-                // 反馈消息给客户端
-                long endResponseTime = System.currentTimeMillis();
-                LOGGER.info("文件 ：[{}] 反馈消息给客户端总共花费时间：{}ms", new Object[]{
-                        taskParams.get(BussinessConstant.FILE_KEY),
-                        (endResponseTime - beginTime)});
-
-                // 组建正常信息
-                String okMsg = String.format(
-                        MsgConstant.SERVER_NODE_INFO + MsgConstant.FILE_RECEIVE_SUCCESS,
-                        ctx.channel().localAddress().toString(),
-                        ctx.channel().remoteAddress().toString(),
-                        taskParams.get(BussinessConstant.FILE_KEY).toString()
-                        );
-
-                return new HandleResult()
-                        .setStatus(HttpResponseStatus.OK)
-                        .setMessage(okMsg);
+            }
+        } catch (Exception e){
+            File file = new File(taskParams.get(FILE_PATH).toString());
+            if (file.exists()) {
+                file.delete();
             }
         }
-
         return null;
     }
 
@@ -237,6 +240,8 @@ public class FileReceive {
         //销毁decoder释放所有的资源
         decoderLocal.get().destroy();
         decoderLocal.remove();
+
+        taskParamsLocal.remove();
     }
 
     /**
@@ -268,6 +273,7 @@ public class FileReceive {
      * @throws java.io.IOException
      */
     private void writeHttpData(InterfaceHttpData data) throws IOException {
+        Map<String, Object> taskParams = taskParamsLocal.get();
         if (data.getHttpDataType() == InterfaceHttpData.HttpDataType.FileUpload) {
             FileUpload fileUpload = (FileUpload) data;
             if (fileUpload.isCompleted()) {
@@ -290,7 +296,7 @@ public class FileReceive {
                 // 缓存本地文件名
                 String localFileName = Joiner.on("_").join(fileUpload.getFilename(), UUID.randomUUID());
                 // 文件网路路径
-                taskParams.put(FILE_URL, urlLocal.get() + localFileName);
+                taskParams.put(FILE_URL, LOCALURI + localFileName);
                 fileNameBuf.append(localFileName);
 
                 fileUpload.renameTo(new File(fileNameBuf.toString()));
@@ -324,18 +330,18 @@ public class FileReceive {
         String md5Source = taskParams.get(BussinessConstant.FILE_MD5).toString();
         // 如果MD5不存在
         if (Strings.isNullOrEmpty(md5Source)) {
-//			writeResponse(ctx, HttpResponseStatus.PRECONDITION_FAILED, "文件MD5参数不能为空！");
             result = "FILE'S MD5 IS NOT EMPTY!";
             return result;
         }
         // 取得文件的MD5
         String filePath = taskParams.get(FILE_PATH).toString();
-        ByteSource byteSource = Files.asByteSource(new File(filePath));
-        String md5needCheck = Hashing.md5().hashBytes(byteSource.read()).toString();
+        File file = new File(filePath);
+        String md5needCheck = Hashing.md5().hashBytes(Files.toByteArray(file)).toString();
         // 如果文件MD5不一致
         if (!Objects.equal(md5Source, md5needCheck)) {
-//			writeResponse(ctx, HttpResponseStatus.PRECONDITION_FAILED, "文件完整性检查失败，两次MD5不一致！");
-            result = "File integrity check failed, twice MD5 inconsistent!";
+            result = "File integrity check failed, twice MD5 inconsistent! md5ForSourceFile : "
+                    + md5Source + " md5ForReceiveFile : " + md5needCheck;
+            file.delete();
             return result;
         }
 

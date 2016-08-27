@@ -2,6 +2,7 @@ package com.ancun.up2yun.endpoint;
 
 import com.ancun.up2yun.cfg.NettyProperties;
 import com.ancun.up2yun.domain.common.HandleResult;
+import com.ancun.up2yun.utils.NettyResult;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,7 @@ import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedFile;
 
+import static com.ancun.up2yun.utils.NettyResult.errorHandleResult;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
@@ -70,33 +72,25 @@ public class FileSend extends FileBase {
 
         // 路径为空
         if (path == null) {
-            return new HandleResult()
-                    .setStatus(FORBIDDEN)
-                    .setMessage("该端点必须要有文件名作为路径.");
+            return errorHandleResult(FORBIDDEN, "该端点必须要有文件名作为路径.");
         }
 
         // 文件不存在
         File file = new File(path);
-        if (file.isHidden() || !file.exists()) {
-            return new HandleResult()
-                    .setStatus(NOT_FOUND)
-                    .setMessage("文件不存在.");
+      if (file.isHidden() || !file.exists()) {
+            return NettyResult.errorHandleResult(NOT_FOUND, "文件不存在.");
         }
 
         // 不为文件
         if (!file.isFile()) {
-            return new HandleResult()
-                    .setStatus(FORBIDDEN)
-                    .setMessage("只允许取得文件.");
+            return NettyResult.errorHandleResult(FORBIDDEN, "只允许取得文件.");
         }
 
         RandomAccessFile raf;
         try {
             raf = new RandomAccessFile(file, "r");
         } catch (FileNotFoundException ignore) {
-            return new HandleResult()
-                    .setStatus(NOT_FOUND)
-                    .setMessage("文件不存在.");
+            return NettyResult.errorHandleResult(NOT_FOUND, "文件不存在.");
         }
         long fileLength = raf.length();
 

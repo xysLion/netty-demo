@@ -56,3 +56,10 @@ encrypt:
 #    password: letmein
 #    alias: mytestkey
 #    secret: changeme
+
+ipLimit:
+  enabled: false
+  accepts:
+    - 127.0.0.1
+  rejects:
+    - 10.0.17.202
