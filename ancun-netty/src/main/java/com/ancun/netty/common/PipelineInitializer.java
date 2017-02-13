@@ -3,6 +3,9 @@
  */
 package com.ancun.netty.common;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
@@ -11,9 +14,6 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.concurrent.EventExecutorGroup;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * netty进出管道初始化
@@ -145,7 +145,7 @@ public abstract class PipelineInitializer extends ChannelInitializer<SocketChann
 	/**
 	 * 将必须的处理器加入到通道中
 	 *
-	 * @param pipeline
+	 * @param pipeline 指定通道
      */
 	protected abstract void addOwnHandlers(ChannelPipeline pipeline);
 
@@ -154,19 +154,13 @@ public abstract class PipelineInitializer extends ChannelInitializer<SocketChann
 	 *
 	 * @param pipeline	指定通道
      */
-	protected void addAllHandlers(ChannelPipeline pipeline)
-    {
-		if (eventExecutorGroup != null)
-		{
-			for (ChannelHandler handler : requestHandlers)
-			{
+	protected void addAllHandlers(ChannelPipeline pipeline) {
+		if (eventExecutorGroup != null) {
+			for (ChannelHandler handler : requestHandlers) {
 				pipeline.addLast(eventExecutorGroup, handler.getClass().getSimpleName(), handler);
 			}
-		}
-		else
-		{
-		    for (ChannelHandler handler : requestHandlers)
-			{
+		} else {
+		    for (ChannelHandler handler : requestHandlers) {
 				pipeline.addLast(handler.getClass().getSimpleName(), handler);
 			}
 		}

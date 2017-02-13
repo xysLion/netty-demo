@@ -4,138 +4,112 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.ancun</groupId>
     <artifactId>ancun-netty-up2yun</artifactId>
-    <version>1.1.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <version>2.0.0-SNAPSHOT</version>
 
-    <name>ancun-netty-up2yun</name>
-    <url>http://maven.apache.org</url>
+    <parent>
+        <groupId>com.ancun</groupId>
+        <artifactId>public-service</artifactId>
+        <version>2.0.0-SNAPSHOT</version>
+    </parent>
 
     <properties>
+        <java.version>1.7</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <io.netty.version>4.0.25.Final</io.netty.version>
-        <org.springframework.version>4.1.6.RELEASE</org.springframework.version>
-        <nexus.url>http://112.124.52.105:9002/nexus/content/repositories</nexus.url>
+        <guava.version>19.0</guava.version>
+        <gson.version>2.3.1</gson.version>
+        <start-class>com.ancun.up2yun.FileApp</start-class>
     </properties>
 
     <dependencies>
 
-        <!-- 任务模块包 -->
+        <!-- spring boot -->
         <dependency>
-            <groupId>com.ancun</groupId>
-            <artifactId>ancun-netty-task-core</artifactId>
-            <version>1.1.0-SNAPSHOT</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
         </dependency>
 
-        <!-- 第三方工具类包 -->
         <dependency>
-            <groupId>ancun</groupId>
-            <artifactId>ancun-thirdparty</artifactId>
-            <version>1.0</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>slf4j-log4j12</artifactId>
-                    <groupId>org.slf4j</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>slf4j-api</artifactId>
-                    <groupId>org.slf4j</groupId>
-                </exclusion>
-            </exclusions>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- datasouce::START -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+        </dependency>
+        <!-- datasouce::END -->
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.ancun</groupId>
+            <artifactId>ancun-boot-starter-encrypt</artifactId>
         </dependency>
 
         <!-- ancun-netty包 -->
         <dependency>
             <groupId>com.ancun</groupId>
             <artifactId>ancun-netty</artifactId>
-            <version>1.1.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
-            <version>${org.springframework.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>${gson.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
         </dependency>
 
     </dependencies>
 
-    <distributionManagement>
-        <repository>
-            <id>releases</id>
-            <name>Internal Releases</name>
-            <url>${nexus.url}/releases</url>
-        </repository>
-        <snapshotRepository>
-            <id>Snapshots</id>
-            <name>Internal Snapshots</name>
-            <url>${nexus.url}/snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
-
     <build>
+        <resources>
+            <resource>
+                <filtering>true</filtering>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
-                    <encoding>UTF-8</encoding>
+                    <mainClass>com.ancun.up2yun.FileApp</mainClass>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>springloaded</artifactId>
+                        <version>1.2.5.RELEASE</version>
+                    </dependency>
+                </dependencies>
             </plugin>
-
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>appassembler-maven-plugin</artifactId>
-                <version>1.8.1</version>
-
-                <configuration>
-                    <configurationDirectory>resources</configurationDirectory>
-                    <copyConfigurationDirectory>true</copyConfigurationDirectory>
-                    <configurationSourceDirectory>src/main/resources/</configurationSourceDirectory>
-
-                    <useWildcardClassPath>true</useWildcardClassPath>
-                    <repositoryLayout>flat</repositoryLayout>
-                    <repositoryName>lib</repositoryName>
-                    <assembleDirectory>${project.build.directory}/up2yun</assembleDirectory>
-
-                    <binFileExtensions>
-                        <unix>.sh</unix>
-                    </binFileExtensions>
-                    <platforms>
-                        <platform>windows</platform>
-                        <platform>unix</platform>
-                    </platforms>
-                    <programs>
-                        <program>
-                            <name>startup</name>
-                            <mainClass>com.ancun.up2yun.boot.ServerBootstrap</mainClass>
-                            <commandLineArguments>
-                            </commandLineArguments>
-                            <jvmSettings>
-                                <initialMemorySize>20m</initialMemorySize>
-                                <maxMemorySize>256m</maxMemorySize>
-                                <maxStackSize>128m</maxStackSize>
-                                <!--<maxDirectMemorySize>256</maxDirectMemorySize>-->
-                                <extraArguments>
-                                    <extraArgument>-Dtest=false</extraArgument>
-                                    <extraArgument>-Dlog4j.properties=false</extraArgument>
-                                    <extraArgument>-Dup2yun.home=$BASEDIR/resources</extraArgument>
-                                </extraArguments>
-                            </jvmSettings>
-                        </program>
-                    </programs>
-                </configuration>
-            </plugin>
-
         </plugins>
     </build>
 

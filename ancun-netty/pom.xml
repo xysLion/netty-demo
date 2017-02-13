@@ -4,13 +4,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.ancun</groupId>
     <artifactId>ancun-netty</artifactId>
-    <version>1.1.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <version>2.0.0-RELEASE</version>
 
-    <name>${project.artifactId}</name>
     <description>Netty configuration using Srping</description>
+
+    <parent>
+        <groupId>com.ancun</groupId>
+        <artifactId>public-service</artifactId>
+        <version>2.0.0-RELEASE</version>
+    </parent>
 
     <developers>
         <developer>
@@ -25,7 +28,6 @@
         <guava.version>18.0</guava.version>
         <org.slf4j.version>1.7.10</org.slf4j.version>
         <ch.qos.logback.version>1.1.2</ch.qos.logback.version>
-        <nexus.url>http://112.124.52.105:9002/nexus/content/repositories</nexus.url>
     </properties>
 
     <dependencies>
@@ -66,19 +68,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <distributionManagement>
-        <repository>
-            <id>releases</id>
-            <name>Internal Releases</name>
-            <url>${nexus.url}/releases</url>
-        </repository>
-        <snapshotRepository>
-            <id>Snapshots</id>
-            <name>Internal Snapshots</name>
-            <url>${nexus.url}/snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
 
     <build>
         <plugins>

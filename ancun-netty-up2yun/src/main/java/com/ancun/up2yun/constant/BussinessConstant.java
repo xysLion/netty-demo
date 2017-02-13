@@ -1,5 +1,15 @@
 package com.ancun.up2yun.constant;
 
+import com.google.gson.Gson;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
+import io.netty.util.NetUtil;
+
 /**
  * 业务常量类
  *
@@ -10,49 +20,44 @@ package com.ancun.up2yun.constant;
  */
 public class BussinessConstant {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(BussinessConstant.class);
+
     /** 用户meta信息前缀 */
-    public static final String USER_META_INFO_PREFIX = "user_meta_info_prefix";
+    public static final String USER_META_INFO_PREFIX = "x-oss-meta-";
 
     /** 上传OSS时显示文件名 */
-    public static final String FILE_KEY = "FILE_KEY";
+    public static final String FILE_KEY = "fileKey";
 
-    /** 本上传组件标识 */
-    public static final String PROCESS_NUM = "process.num";
+    /** 文件路径标记 */
+    public static final String FILE_NAME = "file_name";
 
-    /**  上传文件缓存临时目录 */
-    public static final String TEMP_DIR = "tempdir";
-
-    /**  是否启动只扫描本机 0:只扫描本机 1:扫描所有 */
-    public static final String LOCATION_ONLY = "location.only";
-
-    /**  回调参数名 */
-    public static final String CALLBACK_URI = "CALLBACK_URI";
-
-    /**  重试次数 */
-    public static final String RETRY_TIMES = "retry.times";
-
-    /**  上传云的BUCKET */
-    public static final String BUCKET_SUFFIX = "BUCKET_SUFFIX";
-
-    /**  上传云的accessId */
-    public static final String ACCESSID_SUFFIX = "ACCESSID_SUFFIX";
-
-    /**  上传云的accessKey */
-    public static final String ACCESSKEY_SUFFIX = "ACCESSKEY_SUFFIX";
-
-    /**  上传云的类别 */
-    public static final String YUN_TYPE = "YUN_TYPE";
+    /** 文件网络路径标记 */
+    public static final String FILE_URL = "file_url";
 
     /**  文件md5参数名 */
-    public static final String FILE_MD5 = "FILE_MD5";
-
-    /**  时间格式 */
-    public static final String DEFAULT_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    public static final String FILE_MD5 = "fileMd5";
 
     /** 将文件上传到云 */
     public static final int UPTOYUN = 0;
 
-    /** 将上传结果通知回调方 */
-    public static final int CALLBACK = 1;
+    /** 任务为处理 */
+    public static final int UN_PROCESS = 0;
+
+    /** gson工具类 */
+    public static final Gson GSON = new Gson();
+
+    /** 本地IP地址 */
+    public static final InetAddress LOCALHOST;
+
+    static {
+        InetAddress localhost = null;
+        try {
+            localhost = InetAddress.getLocalHost();
+        } catch (UnknownHostException e) {
+            LOGGER.warn("error then get host info", e);
+            localhost = NetUtil.LOCALHOST4;
+        }
+        LOCALHOST = localhost;
+    }
 
 }

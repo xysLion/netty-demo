@@ -26,7 +26,6 @@ public class Application {
 
 	public static void main(String[] args) {
 		SpringApplication app = new SpringApplication(Application.class);
-		app.setShowBanner(false);
 		app.addListeners(new AESEncript());
 		app.run(args);
 	}
