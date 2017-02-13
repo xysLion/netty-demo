@@ -10,11 +10,11 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>ancun-boot-starter-encrypt</module>
-        <module>ancun-common-server</module>
-        <module>ancun-netty</module>
-        <module>ancun-netty-up2yun</module>
-        <module>ancun-up2yun-task</module>
+        <module>spring-boot-starter-encrypt</module>
+        <module>netty-http-rest-server</module>
+        <module>netty</module>
+        <module>netty-up2yun</module>
+        <module>up2yun-task</module>
     </modules>
 
     <dependencyManagement>
@@ -29,14 +29,14 @@
             </dependency>
 
             <dependency>
-                <groupId>com.ancun</groupId>
-                <artifactId>ancun-boot-starter-encrypt</artifactId>
+                <groupId>io.xys</groupId>
+                <artifactId>spring-boot-starter-encrypt</artifactId>
                 <version>2.0.0-RELEASE</version>
             </dependency>
 
             <dependency>
-                <groupId>com.ancun</groupId>
-                <artifactId>ancun-netty</artifactId>
+                <groupId>io.xys</groupId>
+                <artifactId>netty</artifactId>
                 <version>2.0.0-RELEASE</version>
             </dependency>
 
